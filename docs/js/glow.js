@@ -27,10 +27,14 @@
 
     // pulse dot glow
     function tick() {
-        const ctm = pulseDot.getCTM();
-        if (ctm) {
-            pulseRect.setAttribute("x", ctm.e - pulseR);
-            pulseRect.setAttribute("y", ctm.f - pulseR);
+        const dotCTM = pulseDot.getCTM();
+        const svgCTM = svg.getCTM();
+        if (dotCTM && svgCTM) {
+            const svgInv = svgCTM.inverse();
+            const sx = svgInv.a * dotCTM.e + svgInv.c * dotCTM.f + svgInv.e;
+            const sy = svgInv.b * dotCTM.e + svgInv.d * dotCTM.f + svgInv.f;
+            pulseRect.setAttribute("x", sx - pulseR);
+            pulseRect.setAttribute("y", sy - pulseR);
             pulseRect.setAttribute("width", pulseR * 2);
             pulseRect.setAttribute("height", pulseR * 2);
             pulseRect.setAttribute("transform", "");
