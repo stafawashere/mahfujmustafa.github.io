@@ -2,7 +2,7 @@
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
 
-    const PARTICLE_COUNT = 100;
+    const BASE_PARTICLE_COUNT = 100;
     const CONNECT_DIST = 160;
     const MOUSE_RADIUS = 200;
     const BASE_COLOR = { r: 255, g: 255, b: 255 };
@@ -11,6 +11,13 @@
     
     let width, height, particles;
     let mouse = { x: -9999, y: -9999 };
+
+    function getParticleCount() {
+        const area = (width || window.innerWidth) * (height || window.innerHeight);
+        const reference = 1200 * 800; // desktop-ish
+        const scale = Math.max(0.4, Math.min(1.2, area / reference));
+        return Math.round(BASE_PARTICLE_COUNT * scale);
+    }
 
     function resize() {
         const oldW = width || window.innerWidth;
@@ -26,11 +33,16 @@
                 p.y *= sy;
             }
         }
+
+        const desired = getParticleCount();
+        if (!particles || particles.length !== desired) {
+            createParticles(desired);
+        }
     }
 
-    function createParticles() {
+    function createParticles(count = getParticleCount()) {
         particles = [];
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
+        for (let i = 0; i < count; i++) {
             particles.push({
                 x: Math.random() * width,
                 y: Math.random() * height,
@@ -139,6 +151,5 @@
     window.addEventListener('resize', resize);
 
     resize();
-    createParticles();
     loop();
 })();
