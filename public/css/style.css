@@ -182,47 +182,6 @@ section {
     #mesh-bg {
         display: none;
     }
-
-    body {
-        background: #fff;
-        color: #222;
-    }
-
-    .page {
-        margin: 0;
-        padding: 40px;
-        background: #fff;
-        border: none;
-    }
-
-    .contact-info .accent {
-        color: #c0507a;
-    }
-
-    .skills-group .label,
-    .entry-name {
-        color: #c0507a;
-    }
-
-    .hero-title {
-        filter: none;
-    }
-
-    .hero-title line {
-        stroke: #999;
-    }
-
-    .hero-title circle {
-        fill: #999;
-    }
-
-    .hero-title text {
-        fill: #222;
-    }
-
-    .entry-date {
-        color: #555;
-    }
 }
 
 .pulse {

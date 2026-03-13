@@ -13,7 +13,7 @@
     <canvas id="mesh-bg"></canvas>
     <div class="page">
         <div class="contact-info">
-            <span class="line accent">(347) 844-44127</span>
+            <span class="line accent">(347) 844-4127</span>
             <span class="line accent">MAHFUJMUSTAFA527@GMAIL.COM</span>
             <span class="line">NEW YORK CITY, NY</span>
         </div>
@@ -25,14 +25,14 @@
             const pts = [
                 { x: 30,  by: 30 },
                 { x: 130, by: 12 },
-                { x: 250, by: 35 },
+                { x: 250, by: 30 },
                 { x: 310, by: 18 },
                 { x: 420, by: 25 },
                 { x: 500, by: 10 },
-                { x: 580, by: 38 },
+                { x: 580, by: 31 },
                 { x: 680, by: 15 },
                 { x: 760, by: 30 },
-                { x: 870, by: 12 },
+                { x: 870, by: 18 },
                 { x: 960, by: 28 },
             ];
             const nodes = pts.map(p => ({ x: p.x, y: p.by + CO }));
@@ -54,14 +54,21 @@
 
             <text x="500" y="65" text-anchor="middle" mask="url(#name-mask)"
                   font-family="'Roboto Mono', monospace" font-size="90" font-weight="700"
-                  fill="#c8c8c8" letter-spacing="3">MAHFUJ MUSTAFA</text>
+                  fill="#e6e6e6" letter-spacing="3">MAHFUJ MUSTAFA</text>
 
             <% for (let i = 0; i < nodes.length - 1; i++) { %>
             <line x1="<%= nodes[i].x %>" y1="<%= nodes[i].y %>" x2="<%= nodes[i+1].x %>" y2="<%= nodes[i+1].y %>" stroke="#e88aab" stroke-width="1" stroke-opacity="<%= lineOps[i] %>"/>
             <% } %>
 
             <% for (let i = 0; i < nodes.length; i++) { %>
-            <circle cx="<%= nodes[i].x %>" cy="<%= nodes[i].y %>" r="<%= dotR[i] %>" fill="#e88aab" fill-opacity="<%= dotOps[i] %>"/>
+            <circle
+                cx="<%= nodes[i].x %>"
+                cy="<%= nodes[i].y %>"
+                r="<%= dotR[i] %>"
+                fill="#303030"
+                stroke="#e88aab"
+                stroke-width="1.2"
+                stroke-opacity="<%= dotOps[i] %>"/>
             <% } %>
         </svg>
 
@@ -111,7 +118,7 @@
 
             <div class="entry">
                 <div class="entry-title-line">
-                    <a class="entry-name" href="https://muslimummah.org/" target="_blank">MUNA,</a>
+                    <a class="entry-name" href="https://muslimummah.org/" target="_blank">MUNA</a>,
                     <span class="entry-separator"> 330 E 106th St NY &mdash; </span>
                     <span class="entry-role">Associate Member</span>
                 </div>
@@ -194,12 +201,12 @@
 
             <div class="entry">
                 <div class="entry-title-line">
-                    <a class="entry-name" href="https://www.hsartstech.org/" target="_blank">Arts &amp; Technology,</a>
+                    <a class="entry-name" href="https://www.hsartstech.org/" target="_blank">Arts &amp; Technology</a>,
                     <span class="entry-separator"> 66th St Amsterdam NY &mdash; </span>
                     <span class="entry-role">High School</span>
                 </div>
                 <div class="entry-date">2022 &ndash; 2027</div>
-                <p>High school program focused on arts, technology, and applied programming.</p>
+                <p>High school program focused on arts, technology, and programming.</p>
             </div>
         </section>
     </div>
