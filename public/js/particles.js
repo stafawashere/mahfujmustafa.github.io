@@ -8,7 +8,7 @@
     const BASE_COLOR = { r: 255, g: 255, b: 255 };
     const ACCENT_COLOR = { r: 232, g: 138, b: 171 };
     const BASE_SPEED = 0.4;
-
+    
     let width, height, particles;
     let mouse = { x: -9999, y: -9999 };
 
