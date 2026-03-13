@@ -5,13 +5,11 @@ const path = require('path');
 const dist = path.join(__dirname, 'docs');
 if (!fs.existsSync(dist)) fs.mkdirSync(dist);
 
-// render ejs to static html
 ejs.renderFile(path.join(__dirname, 'views/index.ejs'), {}, (err, html) => {
     if (err) throw err;
     fs.writeFileSync(path.join(dist, 'index.html'), html);
 });
 
-// copy static assets
 function copyDir(src, dest) {
     if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
     for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
