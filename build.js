@@ -1,13 +1,13 @@
-const ejs = require('ejs');
-const fs = require('fs');
-const path = require('path');
+const ejs = require("ejs");
+const fs = require("fs");
+const path = require("path");
 
-const dist = path.join(__dirname, 'docs');
+const dist = path.join(__dirname, "docs");
 if (!fs.existsSync(dist)) fs.mkdirSync(dist);
 
-ejs.renderFile(path.join(__dirname, 'views/index.ejs'), {}, (err, html) => {
+ejs.renderFile(path.join(__dirname, "views/index.ejs"), {}, (err, html) => {
     if (err) throw err;
-    fs.writeFileSync(path.join(dist, 'index.html'), html);
+    fs.writeFileSync(path.join(dist, "index.html"), html);
 });
 
 function copyDir(src, dest) {
@@ -20,5 +20,5 @@ function copyDir(src, dest) {
     }
 }
 
-copyDir(path.join(__dirname, 'public'), dist);
-console.log('built to docs/');
+copyDir(path.join(__dirname, "public"), dist);
+console.log("built to docs/");

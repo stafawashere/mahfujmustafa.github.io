@@ -38,10 +38,10 @@
             ];
             const nodes = pts.map(p => ({ x: p.x, y: p.by + CO }));
 
-            const maskPoly = ['0,' + nodes[0].y]
-                .concat(nodes.map(n => n.x + ',' + n.y))
-                .concat(['1000,' + nodes[nodes.length-1].y, '1000,110', '0,110'])
-                .join(' ');
+            const maskPoly = ["0," + nodes[0].y]
+                .concat(nodes.map(n => n.x + "," + n.y))
+                .concat(["1000," + nodes[nodes.length-1].y, "1000,110", "0,110"])
+                .join(" ");
 
             const lineOps = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
             const dotR    = [3.5, 3, 4, 2.5, 3.5, 3, 3.5, 2.5, 3.5, 3, 2.5];
@@ -62,7 +62,7 @@
                 return { x1: ox, y1: oy, x2: ox + s.dx, y2: oy + s.dy, endDot: s.endDot };
             });
 
-            const tracePath = 'M ' + nodes.map(n => n.x + ' ' + n.y).join(' L ');
+            const tracePath = "M " + nodes.map(n => n.x + " " + n.y).join(" L ");
         %>
 
         <svg class="hero-title" viewBox="0 0 1000 110" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
