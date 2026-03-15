@@ -9,13 +9,16 @@
     const NS = "http://www.w3.org/2000/svg";
     const LINE_COLOR = "#e88aab";
     const LINE_WIDTH = 1;
-    const LINE_OPACITY = 0.5;
     const NODE_R = 3;
     const NODE_FILL = "#1e1e1e";
     const NODE_STROKE = "#e88aab";
     const NODE_STROKE_W = 0.7;
     const FADE_MS = 200;
     const MIN_NODE_DIST = 25;
+
+    const IDLE_OPACITY = 0.14;
+    const ACTIVE_OPACITY = 0.5;
+    const TRUNK_OPACITY = 0.14;
 
     const overlay = document.createElementNS(NS, "svg");
     overlay.setAttribute("id", "circuit-overlay");
@@ -26,7 +29,8 @@
     });
     page.appendChild(overlay);
 
-    let activeGroup = null;
+    let trunkGroup = null;
+    const allGroups = [];
 
     function gutterX() {
         const padding = parseFloat(getComputedStyle(page).paddingLeft);
@@ -51,24 +55,24 @@
         return { x: r.left - pageRect.left, y: r.top - pageRect.top + r.height / 2 };
     }
 
-    function makeLine(x1, y1, x2, y2) {
+    function makeLine(x1, y1, x2, y2, opacity) {
         const l = document.createElementNS(NS, "line");
         l.setAttribute("x1", x1); l.setAttribute("y1", y1);
         l.setAttribute("x2", x2); l.setAttribute("y2", y2);
         l.setAttribute("stroke", LINE_COLOR);
         l.setAttribute("stroke-width", LINE_WIDTH);
-        l.setAttribute("stroke-opacity", LINE_OPACITY);
+        l.setAttribute("stroke-opacity", opacity);
         return l;
     }
 
-    function makeNode(cx, cy) {
+    function makeNode(cx, cy, opacity) {
         const c = document.createElementNS(NS, "circle");
         c.setAttribute("cx", cx); c.setAttribute("cy", cy);
         c.setAttribute("r", NODE_R);
         c.setAttribute("fill", NODE_FILL);
         c.setAttribute("stroke", NODE_STROKE);
         c.setAttribute("stroke-width", NODE_STROKE_W);
-        c.setAttribute("stroke-opacity", "0.7");
+        c.setAttribute("stroke-opacity", opacity);
         return c;
     }
 
@@ -114,25 +118,29 @@
         return { gapY, colGapX: (prevRight + elLeft) / 2 };
     }
 
-    function buildWaypoints(el) {
+    // Returns { branchY, branchPts } — branchY is where this entry taps the trunk
+    function buildBranch(el) {
         const target = targetPos(el);
         if (!target) return null;
 
         const gx = gutterX();
-        const sy = startY();
-        const pts = [{ x: gx, y: sy }];
+        let branchY;
+        const pts = [];
 
         if (isRightCol(el)) {
             const { gapY, colGapX } = rightColRouting(el);
+            branchY = gapY;
             pts.push({ x: gx, y: gapY });
             pts.push({ x: colGapX, y: gapY });
             pts.push({ x: colGapX, y: target.y });
             pts.push({ x: target.x, y: target.y });
         } else {
+            branchY = target.y;
             pts.push({ x: gx, y: target.y });
             pts.push({ x: target.x, y: target.y });
         }
 
+        // Nudge terminal slightly past the title
         const last = pts[pts.length - 1];
         const prev = pts[pts.length - 2];
         const dx = last.x - prev.x;
@@ -141,48 +149,102 @@
         last.x += (dx / len) * 2;
         last.y += (dy / len) * 2;
 
-        return pts;
+        return { branchY, pts };
     }
 
-    function show(el) {
-        hide();
-        const pts = buildWaypoints(el);
-        if (!pts) return;
-
+    function buildBranchGroup(pts) {
         const g = document.createElementNS(NS, "g");
         g.classList.add("circuit-connector");
-        g.style.opacity = "0";
+        g.style.opacity = String(IDLE_OPACITY);
         g.style.transition = `opacity ${FADE_MS}ms ease`;
 
         for (let i = 0; i < pts.length - 1; i++) {
-            g.appendChild(makeLine(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y));
+            g.appendChild(makeLine(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, ACTIVE_OPACITY));
         }
 
         const terminal = pts[pts.length - 1];
         for (let i = 0; i < pts.length - 1; i++) {
-            const prev = i > 0 ? Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y) : Infinity;
-            const next = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
-            const term = Math.hypot(terminal.x - pts[i].x, terminal.y - pts[i].y);
-            if (prev >= MIN_NODE_DIST && next >= MIN_NODE_DIST && term >= MIN_NODE_DIST) {
-                g.appendChild(makeNode(pts[i].x, pts[i].y));
+            const prevDist = i > 0 ? Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y) : Infinity;
+            const nextDist = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+            const termDist = Math.hypot(terminal.x - pts[i].x, terminal.y - pts[i].y);
+            if (prevDist >= MIN_NODE_DIST && nextDist >= MIN_NODE_DIST && termDist >= MIN_NODE_DIST) {
+                g.appendChild(makeNode(pts[i].x, pts[i].y, 0.7));
             }
         }
 
-        overlay.appendChild(g);
-        activeGroup = g;
-        requestAnimationFrame(() => { g.style.opacity = "1"; });
+        return g;
     }
 
-    function hide() {
-        if (!activeGroup) return;
-        const g = activeGroup;
-        activeGroup = null;
-        g.style.opacity = "0";
-        setTimeout(() => { if (g.parentNode) g.parentNode.removeChild(g); }, FADE_MS);
+    function drawAll() {
+        // Clear previous
+        if (trunkGroup && trunkGroup.parentNode) trunkGroup.parentNode.removeChild(trunkGroup);
+        trunkGroup = null;
+        allGroups.forEach(item => {
+            if (item.g.parentNode) item.g.parentNode.removeChild(item.g);
+        });
+        allGroups.length = 0;
+
+        const gx = gutterX();
+        const sy = startY();
+        let maxBranchY = sy;
+
+        // First pass: build all branches and find the trunk extent
+        const entries = [];
+        page.querySelectorAll(".entry, .skills-group").forEach(el => {
+            const result = buildBranch(el);
+            if (!result) return;
+            entries.push({ el, ...result });
+            if (result.branchY > maxBranchY) maxBranchY = result.branchY;
+        });
+
+        // Draw single shared trunk line
+        trunkGroup = document.createElementNS(NS, "g");
+        trunkGroup.classList.add("circuit-trunk");
+        trunkGroup.style.opacity = String(TRUNK_OPACITY);
+        trunkGroup.style.transition = `opacity ${FADE_MS}ms ease`;
+        trunkGroup.appendChild(makeLine(gx, sy, gx, maxBranchY, ACTIVE_OPACITY));
+        // Add junction nodes on trunk where branches tap in
+        entries.forEach(entry => {
+            trunkGroup.appendChild(makeNode(gx, entry.branchY, 0.7));
+        });
+        overlay.appendChild(trunkGroup);
+
+        // Draw individual branch groups (no trunk segment)
+        entries.forEach(entry => {
+            const g = buildBranchGroup(entry.pts);
+            overlay.appendChild(g);
+            allGroups.push({ el: entry.el, g, branchY: entry.branchY });
+        });
     }
 
+    function highlight(el) {
+        // Brighten trunk
+        if (trunkGroup) trunkGroup.style.opacity = String(TRUNK_OPACITY * 2);
+        allGroups.forEach(item => {
+            item.g.style.opacity = item.el === el ? String(ACTIVE_OPACITY) : String(IDLE_OPACITY);
+        });
+    }
+
+    function unhighlight() {
+        if (trunkGroup) trunkGroup.style.opacity = String(TRUNK_OPACITY);
+        allGroups.forEach(item => {
+            item.g.style.opacity = String(IDLE_OPACITY);
+        });
+    }
+
+    // Initial draw
+    drawAll();
+
+    // Hover events
     page.querySelectorAll(".entry, .skills-group").forEach(el => {
-        el.addEventListener("mouseenter", () => show(el));
-        el.addEventListener("mouseleave", () => hide());
+        el.addEventListener("mouseenter", () => highlight(el));
+        el.addEventListener("mouseleave", () => unhighlight());
+    });
+
+    // Redraw on resize
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(drawAll, 150);
     });
 })();
