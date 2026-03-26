@@ -104,14 +104,16 @@
             gapY = (bottom + next.getBoundingClientRect().top - pageRect.top) / 2;
         } else {
             const section = el.closest("section");
-            const nextSection = section ? section.nextElementSibling : null;
+            let nextSection = section ? section.nextElementSibling : null;
+            while (nextSection && nextSection.tagName !== "SECTION") nextSection = nextSection.nextElementSibling;
             if (nextSection) {
                 const nextTop = nextSection.getBoundingClientRect().top - pageRect.top;
                 gapY = (bottom + nextTop) / 2;
             } else {
-                gapY = section
-                    ? (bottom + section.getBoundingClientRect().bottom - pageRect.top) / 2
-                    : bottom + 12;
+                const sectionBottom = section
+                    ? section.getBoundingClientRect().bottom - pageRect.top
+                    : bottom + 24;
+                gapY = Math.max(bottom + 20, (bottom + sectionBottom) / 2);
             }
         }
 
