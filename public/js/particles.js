@@ -2,12 +2,12 @@
     const canvas = document.getElementById("mesh-bg");
     const ctx = canvas.getContext("2d");
 
-    const particleCount = 100;
-    const connectDist = 160;
+    const particleCount = 40;
+    const connectDist = 140;
     const mouseRadius = 200;
     const baseColor = { r: 255, g: 255, b: 255 };
     const accentColor = { r: 232, g: 138, b: 171 };
-    const speed = 0.4;
+    const speed = 0.2;
 
     let width, height, particles;
     let mouse = { x: -9999, y: -9999 };
@@ -48,7 +48,7 @@
                 y: Math.random() * height,
                 vx: (Math.random() - 0.5) * speed,
                 vy: (Math.random() - 0.5) * speed,
-                radius: Math.random() * 1.5 + 0.5,
+                radius: Math.random() * 0.8 + 0.3,
             });
         }
     }
@@ -97,17 +97,17 @@
                 if (dist < connectDist) {
                     const midX = (a.x + b.x) / 2;
                     const midY = (a.y + b.y) / 2;
-                    const alpha = (1 - dist / connectDist) * 0.35;
+                    const alpha = (1 - dist / connectDist) * 0.15;
                     const data = getColorData(midX, midY, alpha);
 
                     ctx.beginPath();
                     ctx.moveTo(a.x, a.y);
                     ctx.lineTo(b.x, b.y);
                     ctx.strokeStyle = data.color;
-                    ctx.lineWidth = 0.6 + data.glow * 1.2;
+                    ctx.lineWidth = 0.4 + data.glow * 0.6;
                     if (data.glow > 0.05) {
-                        ctx.shadowColor = "rgba(232,138,171,0.6)";
-                        ctx.shadowBlur = data.glow * 12;
+                        ctx.shadowColor = "rgba(232,138,171,0.3)";
+                        ctx.shadowBlur = data.glow * 6;
                     } else {
                         ctx.shadowBlur = 0;
                     }
@@ -117,13 +117,13 @@
         }
 
         for (const p of particles) {
-            const data = getColorData(p.x, p.y, 0.7);
+            const data = getColorData(p.x, p.y, 0.35);
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.radius + data.glow * 1.5, 0, Math.PI * 2);
             ctx.fillStyle = data.color;
             if (data.glow > 0.05) {
-                ctx.shadowColor = "rgba(232,138,171,0.7)";
-                ctx.shadowBlur = data.glow * 16;
+                ctx.shadowColor = "rgba(232,138,171,0.4)";
+                ctx.shadowBlur = data.glow * 8;
             } else {
                 ctx.shadowBlur = 0;
             }

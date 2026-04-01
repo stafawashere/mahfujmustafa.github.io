@@ -115,76 +115,73 @@
 
             
             <line x1="130" y1="53" x2="130" y2="69" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
-            <circle cx="130" cy="69" r="2" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            <circle cx="130" cy="69" r="2" fill="#1e1e1e" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
             
             <line x1="310" y1="56" x2="325" y2="70" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
-            <circle cx="325" cy="70" r="1.5" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            <circle cx="325" cy="70" r="1.5" fill="#1e1e1e" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
             
             <line x1="415" y1="68" x2="415" y2="82" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
-            <circle cx="415" cy="82" r="2" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            <circle cx="415" cy="82" r="2" fill="#1e1e1e" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
             
             <line x1="584" y1="68" x2="572" y2="81" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
-            <circle cx="572" cy="81" r="1.8" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            <circle cx="572" cy="81" r="1.8" fill="#1e1e1e" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
             
             <line x1="756" y1="68" x2="756" y2="82" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
-            <circle cx="756" cy="82" r="2" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            <circle cx="756" cy="82" r="2" fill="#1e1e1e" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
             
             <line x1="870" y1="61" x2="884" y2="71" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
-            <circle cx="884" cy="71" r="1.5" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            <circle cx="884" cy="71" r="1.5" fill="#1e1e1e" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
             
+            <circle class="circuit-node" cx="30" cy="68" r="3.5"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="130" cy="53" r="3"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="250" cy="68" r="4"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="310" cy="56" r="2.5"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="415" cy="68" r="3.5"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="507" cy="53" r="3"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="584" cy="68" r="3.5"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="680" cy="53" r="2.5"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="756" cy="68" r="3.5"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="870" cy="61" r="3"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="960" cy="70" r="2.5"
+                    fill="#1e1e1e" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
 
             <g id="pulse-group">
-                <animate attributeName="opacity" dur="5s" repeatCount="indefinite"
+                <animate attributeName="opacity" dur="10s" repeatCount="indefinite"
                          values="0;1;1;0;0" keyTimes="0;0.08;0.72;0.8;1"/>
-
+            
                 <circle id="pulse-dot" r="3" fill="#e88aab" filter="url(#pulse-glow)" opacity="0.9">
-                    <animateMotion dur="5s" repeatCount="indefinite" path="M 30 68 L 130 53 L 250 68 L 310 56 L 415 68 L 507 53 L 584 68 L 680 53 L 756 68 L 870 61 L 960 70"
+                    <animateMotion dur="10s" repeatCount="indefinite" path="M 30 68 L 130 53 L 250 68 L 310 56 L 415 68 L 507 53 L 584 68 L 680 53 L 756 68 L 870 61 L 960 70"
                                   keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear"/>
                     <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
                 </circle>
-
+            
                 <circle r="6" fill="none" stroke="#e88aab" stroke-width="0.8" opacity="0.3">
-                    <animateMotion dur="5s" repeatCount="indefinite" path="M 30 68 L 130 53 L 250 68 L 310 56 L 415 68 L 507 53 L 584 68 L 680 53 L 756 68 L 870 61 L 960 70"
+                    <animateMotion dur="10s" repeatCount="indefinite" path="M 30 68 L 130 53 L 250 68 L 310 56 L 415 68 L 507 53 L 584 68 L 680 53 L 756 68 L 870 61 L 960 70"
                                   keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear"/>
                     <animate attributeName="r" values="4;8;4" dur="1.5s" repeatCount="indefinite"/>
                     <animate attributeName="opacity" values="0.3;0.1;0.3" dur="1.5s" repeatCount="indefinite"/>
                 </circle>
             </g>
-
-            
-            <circle class="circuit-node" cx="30" cy="68" r="3.5"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="130" cy="53" r="3"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="250" cy="68" r="4"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="310" cy="56" r="2.5"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="415" cy="68" r="3.5"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="507" cy="53" r="3"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="584" cy="68" r="3.5"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="680" cy="53" r="2.5"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="756" cy="68" r="3.5"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="870" cy="61" r="3"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
-            <circle class="circuit-node" cx="960" cy="70" r="2.5"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
-            
         </svg>
 
         <section>
@@ -245,7 +242,7 @@
             <h2>
                 <span class="section-arrow">
                     <span class="pulse">></span>
-                    <span>Experience</span>
+                    <span>Experiences</span>
                 </span>
             </h2>
             <div class="grid">

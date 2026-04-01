@@ -30,6 +30,7 @@
 
     let trunkGroup = null;
     const allGroups = [];
+    const sectionGroups = [];
 
     function gutterX() {
         const padding = parseFloat(getComputedStyle(page).paddingLeft);
@@ -177,6 +178,62 @@
         return g;
     }
 
+    function drawSectionConnectors() {
+        overlay.querySelectorAll(".section-connector").forEach(el => el.remove());
+        sectionGroups.length = 0;
+
+        const pageRect = page.getBoundingClientRect();
+
+        page.querySelectorAll("section").forEach(section => {
+            const h2 = section.querySelector("h2");
+            if (!h2) return;
+
+            const titleEl = h2.querySelector(".section-arrow") || h2;
+            const sRect = section.getBoundingClientRect();
+            const h2Rect = h2.getBoundingClientRect();
+            const titleRect = titleEl.getBoundingClientRect();
+
+            const circleX = sRect.right - pageRect.left - 3;
+            const lineY = h2Rect.top - pageRect.top + h2Rect.height / 2;
+            const bottomCircleY = sRect.bottom - pageRect.top - 3;
+
+            const g = document.createElementNS(NS, "g");
+            g.classList.add("section-connector");
+            g.style.opacity = String(IDLE_OPACITY);
+            g.style.transition = "opacity " + FADE_MS + "ms ease";
+
+            // Horizontal line from title text right to top circle
+            g.appendChild(makeLine(
+                titleRect.right - pageRect.left - 8,
+                lineY,
+                circleX - NODE_R,
+                lineY,
+                ACTIVE_OPACITY
+            ));
+
+            // Top circle at the h2 level
+            g.appendChild(makeNode(circleX, lineY, 0.7));
+
+            // Vertical line down the right side
+            g.appendChild(makeLine(circleX, lineY + NODE_R, circleX, bottomCircleY - NODE_R, ACTIVE_OPACITY));
+
+            // Bottom circle
+            g.appendChild(makeNode(circleX, bottomCircleY, 0.7));
+
+            overlay.appendChild(g);
+            sectionGroups.push({ section, g });
+        });
+
+        sectionGroups.forEach(({ section, g }) => {
+            section.addEventListener("mouseenter", () => {
+                g.style.opacity = String(ACTIVE_OPACITY);
+            });
+            section.addEventListener("mouseleave", () => {
+                g.style.opacity = String(IDLE_OPACITY);
+            });
+        });
+    }
+
     function drawAll() {
         if (trunkGroup && trunkGroup.parentNode) trunkGroup.parentNode.removeChild(trunkGroup);
         trunkGroup = null;
@@ -212,6 +269,8 @@
             overlay.appendChild(g);
             allGroups.push({ el: entry.el, g, branchY: entry.branchY });
         });
+
+        drawSectionConnectors();
     }
 
     function highlight(el) {
