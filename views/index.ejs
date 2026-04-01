@@ -36,57 +36,13 @@
             </div>
         </div>
 
-        <%
-            // circuit y offset — higher = lower
-            const CO = 38;
-
-            const pts = [
-                { x: 30,  by: 30 },
-                { x: 130, by: 15 },
-                { x: 250, by: 30 },
-                { x: 310, by: 18 },
-                { x: 415, by: 30 },
-                { x: 507, by: 15 },
-                { x: 584, by: 30 },
-                { x: 680, by: 15 },
-                { x: 756, by: 30 },
-                { x: 870, by: 23 },
-                { x: 960, by: 32 },
-            ];
-            const nodes = pts.map(p => ({ x: p.x, y: p.by + CO }));
-
-            const maskPoly = ["0," + nodes[0].y]
-                .concat(nodes.map(n => n.x + "," + n.y))
-                .concat(["1000," + nodes[nodes.length-1].y, "1000,110", "0,110"])
-                .join(" ");
-
-            const lineOps = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
-            const dotR    = [3.5, 3, 4, 2.5, 3.5, 3, 3.5, 2.5, 3.5, 3, 2.5];
-            const dotOps  = [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7];
-
-            const stubs = [
-                { from: 1, dx: 0,   dy: 16,  endDot: 2 },
-                { from: 3, dx: 15,  dy: 14,  endDot: 1.5 },
-                { from: 4, dx: 0,   dy: 14,  endDot: 2 },
-                { from: 6, dx: -12, dy: 13,  endDot: 1.8 },
-                { from: 8, dx: 0,   dy: 14,  endDot: 2 },
-                { from: 9, dx: 14,  dy: 10,  endDot: 1.5 },
-            ];
-
-            const resolvedStubs = stubs.map(s => {
-                const ox = nodes[s.from].x;
-                const oy = nodes[s.from].y;
-                return { x1: ox, y1: oy, x2: ox + s.dx, y2: oy + s.dy, endDot: s.endDot };
-            });
-
-            const tracePath = "M " + nodes.map(n => n.x + " " + n.y).join(" L ");
-        %>
+        
 
         <svg class="hero-title" viewBox="0 0 1000 110" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <mask id="name-mask">
                     <rect x="0" y="0" width="1000" height="110" fill="white"/>
-                    <polygon points="<%= maskPoly %>" fill="black"/>
+                    <polygon points="0,68 30,68 130,53 250,68 310,56 415,68 507,53 584,68 680,53 756,68 870,61 960,70 1000,70 1000,110 0,110" fill="black"/>
                 </mask>
 
                 <pattern id="pcb-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -101,7 +57,7 @@
                 <mask id="glow-mask">
                     <rect id="glow-rect" x="0" y="0" width="200" height="200" fill="url(#glow-grad)" transform="translate(-9999, -9999)"/>
                     <rect id="pulse-glow-rect" x="0" y="0" width="160" height="160" fill="url(#glow-grad)" transform="translate(-9999, -9999)"/>
-                    <polygon points="<%= maskPoly %>" fill="black"/>
+                    <polygon points="0,68 30,68 130,53 250,68 310,56 415,68 507,53 584,68 680,53 756,68 870,61 960,70 1000,70 1000,110 0,110" fill="black"/>
                 </mask>
 
                 <filter id="pulse-glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -135,37 +91,100 @@
                   fill="#e87da3" letter-spacing="3" opacity="0.6" filter="url(#letterpress)">MAHFUJ MUSTAFA</text>
 
 
-            <% for (let i = 0; i < nodes.length - 1; i++) { %>
-            <line x1="<%= nodes[i].x %>" y1="<%= nodes[i].y %>" x2="<%= nodes[i+1].x %>" y2="<%= nodes[i+1].y %>" stroke="#e88aab" stroke-width="1" stroke-opacity="<%= lineOps[i] %>"/>
-            <% } %>
+            
+            <line x1="30" y1="68" x2="130" y2="53" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="130" y1="53" x2="250" y2="68" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="250" y1="68" x2="310" y2="56" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="310" y1="56" x2="415" y2="68" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="415" y1="68" x2="507" y2="53" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="507" y1="53" x2="584" y2="68" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="584" y1="68" x2="680" y2="53" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="680" y1="53" x2="756" y2="68" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="756" y1="68" x2="870" y2="61" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
+            <line x1="870" y1="61" x2="960" y2="70" stroke="#e88aab" stroke-width="1" stroke-opacity="0.25"/>
+            
 
-            <% for (const stub of resolvedStubs) { %>
-            <line x1="<%= stub.x1 %>" y1="<%= stub.y1 %>" x2="<%= stub.x2 %>" y2="<%= stub.y2 %>" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.12"/>
-            <circle cx="<%= stub.x2 %>" cy="<%= stub.y2 %>" r="<%= stub.endDot %>" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.15"/>
-            <% } %>
+            
+            <line x1="130" y1="53" x2="130" y2="69" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
+            <circle cx="130" cy="69" r="2" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            
+            <line x1="310" y1="56" x2="325" y2="70" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
+            <circle cx="325" cy="70" r="1.5" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            
+            <line x1="415" y1="68" x2="415" y2="82" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
+            <circle cx="415" cy="82" r="2" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            
+            <line x1="584" y1="68" x2="572" y2="81" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
+            <circle cx="572" cy="81" r="1.8" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            
+            <line x1="756" y1="68" x2="756" y2="82" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
+            <circle cx="756" cy="82" r="2" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            
+            <line x1="870" y1="61" x2="884" y2="71" stroke="#e88aab" stroke-width="0.6" stroke-opacity="0.06"/>
+            <circle cx="884" cy="71" r="1.5" fill="#303030" stroke="#e88aab" stroke-width="0.4" stroke-opacity="0.08"/>
+            
 
             <g id="pulse-group">
                 <animate attributeName="opacity" dur="5s" repeatCount="indefinite"
                          values="0;1;1;0;0" keyTimes="0;0.08;0.72;0.8;1"/>
 
                 <circle id="pulse-dot" r="3" fill="#e88aab" filter="url(#pulse-glow)" opacity="0.9">
-                    <animateMotion dur="5s" repeatCount="indefinite" path="<%= tracePath %>"
+                    <animateMotion dur="5s" repeatCount="indefinite" path="M 30 68 L 130 53 L 250 68 L 310 56 L 415 68 L 507 53 L 584 68 L 680 53 L 756 68 L 870 61 L 960 70"
                                   keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear"/>
                     <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
                 </circle>
 
                 <circle r="6" fill="none" stroke="#e88aab" stroke-width="0.8" opacity="0.3">
-                    <animateMotion dur="5s" repeatCount="indefinite" path="<%= tracePath %>"
+                    <animateMotion dur="5s" repeatCount="indefinite" path="M 30 68 L 130 53 L 250 68 L 310 56 L 415 68 L 507 53 L 584 68 L 680 53 L 756 68 L 870 61 L 960 70"
                                   keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear"/>
                     <animate attributeName="r" values="4;8;4" dur="1.5s" repeatCount="indefinite"/>
                     <animate attributeName="opacity" values="0.3;0.1;0.3" dur="1.5s" repeatCount="indefinite"/>
                 </circle>
             </g>
 
-            <% for (let i = 0; i < nodes.length; i++) { %>
-            <circle class="circuit-node" cx="<%= nodes[i].x %>" cy="<%= nodes[i].y %>" r="<%= dotR[i] %>"
-                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="<%= dotOps[i] %>"/>
-            <% } %>
+            
+            <circle class="circuit-node" cx="30" cy="68" r="3.5"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="130" cy="53" r="3"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="250" cy="68" r="4"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="310" cy="56" r="2.5"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="415" cy="68" r="3.5"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="507" cy="53" r="3"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="584" cy="68" r="3.5"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="680" cy="53" r="2.5"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="756" cy="68" r="3.5"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="870" cy="61" r="3"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
+            <circle class="circuit-node" cx="960" cy="70" r="2.5"
+                    fill="#303030" stroke="#e88aab" stroke-width="0.7" stroke-opacity="0.4"/>
+            
         </svg>
 
         <section>
@@ -176,14 +195,48 @@
                 </span>
             </h2>
             <div class="grid">
-                <div class="skills-group">
-                    <span class="label">Technical Skills:</span> Python, Lua, JavaScript, REST API Design, WebSocket Programming, Discord API, Roblox Studio, Git, TinyDB, Reverse Engineering, Security Analysis, Server Performance Optimization, Debugging, Automation.
+                <div class="skills-group skills-group--bullets">
+                    <span class="label">Domains</span>
+                    <ul>
+                        <li>Reverse Engineering</li>
+                        <li>Security Analysis</li>
+                        <li>Full-Stack Development</li>
+                        <li>Client-Server Architecture</li>
+                        <li>Performance Optimization</li>
+                        <li>API Wrapper Design</li>
+                        <li>Bot Development</li>
+                        <li>Data Modeling</li>
+                        <li>Game Development</li>
+                        <li>Live Operations Management</li>
+                        <li>Automation</li>
+                    </ul>
                 </div>
                 <div class="skills-group">
-                    <span class="label">Development:</span> Full-stack Game Development, Bot Development, API Wrapper Design, Modular Architecture, Client-Server Systems, Live Operations Management.
+                    <span class="label">Frameworks &amp; Tools</span>
+                    <ul>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" width="14" height="14">Next.js</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="14" height="14">React</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg" width="14" height="14">Express.js</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-original.svg" width="14" height="14">Tailwind CSS</li>
+                        <li><img src="https://cdn.simpleicons.org/openapiinitiative/d0d0d0" width="14" height="14">REST APIs</li>
+                        <li><img src="https://cdn.simpleicons.org/socketdotio/d0d0d0" width="14" height="14">WebSockets</li>
+                        <li><img src="https://cdn.simpleicons.org/discord/5865F2" width="14" height="14">Discord API</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="14" height="14">discord.py</li>
+                        <li><img src="https://cdn.simpleicons.org/roblox/d0d0d0" width="14" height="14">Roblox Studio</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="14" height="14">PostgreSQL</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/prisma/prisma-original.svg" width="14" height="14">Prisma</li>
+                        <li><img src="https://cdn.simpleicons.org/sqlite/d0d0d0" width="14" height="14">TinyDB</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" width="14" height="14">Git</li>
+                    </ul>
                 </div>
                 <div class="skills-group">
-                    <span class="label">Soft Skills:</span> Team Collaboration, Project Planning, Community Organizing, Youth Mentorship, Event Coordination, Volunteer Leadership.
+                    <span class="label">Languages</span>
+                    <ul>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="14" height="14">Python</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/lua/lua-original.svg" width="14" height="14">Lua</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="14" height="14">JavaScript</li>
+                        <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" width="14" height="14">TypeScript</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -258,6 +311,11 @@
             <div class="entry">
                 <div class="entry-title-line">
                     <a class="entry-name" href="https://github.com/stafawashere/stafawashere.github.io" target="_blank">mahfujmustafa.dev</a>
+                    <span class="language-icons">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="16" height="16" title="JavaScript">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" width="16" height="16" title="Node.js (EJS)">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" width="16" height="16" title="CSS">
+                    </span>
                     <span class="entry-separator"> &mdash; </span>
                     <span class="entry-role">Portfolio Website</span>
                 </div>
@@ -268,6 +326,9 @@
             <div class="entry">
                 <div class="entry-title-line">
                     <a class="entry-name" href="https://github.com/stafawashere/Allusion" target="_blank">Allusion</a>
+                    <span class="language-icons">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/lua/lua-original.svg" width="16" height="16" title="Lua">
+                    </span>
                     <span class="entry-separator"> &mdash; </span>
                     <span class="entry-role">Security Research</span>
                 </div>
@@ -278,6 +339,12 @@
             <div class="entry">
                 <div class="entry-title-line">
                     <a class="entry-name" href="https://github.com/stafawashere/dms" target="_blank">Distribution Network</a>
+                    <span class="language-icons">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" width="16" height="16" title="Next.js">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" width="16" height="16" title="TypeScript">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-original.svg" width="16" height="16" title="Tailwind CSS">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="16" height="16" title="PostgreSQL">
+                    </span>
                     <span class="entry-separator"> &mdash; </span>
                     <span class="entry-role">Full-Stack Web App</span>
                 </div>
@@ -288,6 +355,9 @@
             <div class="entry">
                 <div class="entry-title-line">
                     <a class="entry-name" href="https://github.com/stafawashere/Disky" target="_blank">Disky</a>
+                    <span class="language-icons">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="16" height="16" title="Python">
+                    </span>
                     <span class="entry-separator"> &mdash; </span>
                     <span class="entry-role">Discord API Wrapper</span>
                 </div>
@@ -298,6 +368,9 @@
             <div class="entry">
                 <div class="entry-title-line">
                     <a class="entry-name" href="https://github.com/stafawashere/ledger" target="_blank">Ledger</a>
+                    <span class="language-icons">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="16" height="16" title="Python">
+                    </span>
                     <span class="entry-separator"> &mdash; </span>
                     <span class="entry-role">Discord Bot</span>
                 </div>
