@@ -28,7 +28,7 @@
   color: var(--text-dim);
   border-bottom: 1px solid var(--border);
   padding-bottom: 16px;
-  margin-bottom: 44px;
+  margin-bottom: 34px;
 }
 
 .hero-meta .available {
@@ -47,6 +47,7 @@
 }
 
 #hero-prompt {
+  position: relative;
   display: inline-block;
   cursor: pointer;
   border-radius: 8px;
@@ -57,6 +58,65 @@
 
 #hero-prompt:hover { background: rgba(var(--purple-rgb), 0.08); }
 
+#hero-prompt-tip {
+  --tip-bg: color-mix(in srgb, var(--purple) 26%, #0a0608);
+  --tip-border: color-mix(in srgb, var(--lilac) 48%, #0c0709);
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 24px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lilac);
+  background: var(--tip-bg);
+  border: 1px solid var(--tip-border);
+  border-radius: 9px;
+  padding: 8px 15px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(var(--purple-rgb), 0.28),
+    inset 0 1px 0 rgba(var(--lilac-rgb), 0.12);
+  text-shadow: 0 0 12px rgba(var(--lilac-rgb), 0.4);
+  margin-bottom: 25px;
+}
+
+#hero-prompt-tip.is-armed {
+  animation: tipFadeSequence 4.5s ease-in-out infinite;
+}
+
+#hero-prompt-tip::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-style: solid;
+  border-width: 10px 10px 10px 0;
+  border-color: transparent var(--tip-border) transparent transparent;
+}
+
+#hero-prompt-tip::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-style: solid;
+  border-width: 8px 9px 8px 0;
+  border-color: transparent var(--tip-bg) transparent transparent;
+}
+
+#hero-prompt:hover #hero-prompt-tip,
+#hero-prompt-tip.is-dismissed {
+  animation: none;
+  opacity: 0;
+}
+
 .hero-prompt-host {
   font-size: 14px;
   color: var(--text-dim);
@@ -66,6 +126,8 @@
 .hero-prompt-host .tilde { color: var(--purple); }
 
 .hero-prompt-cmd {
+  display: flex;
+  align-items: center;
   font-size: 16px;
   min-height: 22px;
   color: var(--text-bright);
@@ -90,6 +152,15 @@
   letter-spacing: -0.045em;
   margin: 0 0 26px;
   white-space: pre;
+}
+
+.name-glyph {
+  color: var(--lilac);
+  transition: color 0.45s ease;
+}
+
+.name-glyph.is-set {
+  color: inherit;
 }
 
 .hero-role {
@@ -159,7 +230,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--border-nav);
+  border: 1px solid rgba(var(--lilac-rgb), 0.22);
   color: var(--text-bright);
   font-size: 14px;
   padding: 13px 22px;
@@ -176,6 +247,14 @@
   background: rgba(var(--purple-rgb), 0.08);
 }
 
+.btn-secondary svg {
+  transition: color .15s;
+}
+
+.btn-secondary:hover svg {
+  color: var(--purple);
+}
+
 .btn-icon {
   display: inline-flex;
   align-items: center;
@@ -189,7 +268,7 @@
 }
 
 .btn-icon:hover {
-  color: var(--text-bright);
+  color: var(--lilac);
   border-color: var(--purple);
 }
 

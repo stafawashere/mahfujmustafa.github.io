@@ -16,6 +16,26 @@ function typeHero(cmdEl, onDone) {
 function startRotor(rotorEl) {
   const words = PORTFOLIO.rotor;
   let w = 0, j = 0, deleting = false;
+  let heroVisible = true;
+  let pending = null;
+
+  const heroEl = document.getElementById("hero");
+  if (heroEl && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(entries => {
+      heroVisible = entries.some(e => e.isIntersecting);
+      if (heroVisible && pending) {
+        const resume = pending;
+        pending = null;
+        resume();
+      }
+    });
+    io.observe(heroEl);
+  }
+
+  const schedule = (ms) => setTimeout(() => {
+    if (!heroVisible) { pending = loop; return; }
+    loop();
+  }, ms);
 
   const loop = () => {
     const word = words[w];
@@ -24,7 +44,7 @@ function startRotor(rotorEl) {
       rotorEl.textContent = word.slice(0, j);
       if (j === word.length) {
         deleting = true;
-        setTimeout(loop, 1500);
+        schedule(1500);
         return;
       }
     } else {
@@ -33,18 +53,18 @@ function startRotor(rotorEl) {
       if (j === 0) {
         deleting = false;
         w = (w + 1) % words.length;
-        setTimeout(loop, 320);
+        schedule(320);
         return;
       }
     }
-    setTimeout(loop, deleting ? 38 : 78);
+    schedule(deleting ? 38 : 78);
   };
 
   loop();
 }
 
-function animateHeroCount(el, target) {
-  const duration = 1800;
+function animateHeroCount(el, target, durationMs) {
+  const duration = Math.max(400, durationMs || 1800);
   const start    = performance.now();
 
   const step = (now) => {
@@ -52,16 +72,17 @@ function animateHeroCount(el, target) {
     const t       = Math.min(elapsed / duration, 1);
     const eased   = 1 - Math.pow(1 - t, 3);
     const val     = Math.round(eased * target);
-    el.textContent = val.toLocaleString() + 'M+';
+    el.textContent = val.toLocaleString() + 'M+ player visits';
     if (t < 1) requestAnimationFrame(step);
   };
 
   requestAnimationFrame(step);
 }
 
-function bootHeroName(h1El) {
+function bootHeroName(h1El, revealMs) {
   const glyphs = '!<>-_\\/[]{}=+*^?#$%01ABCDEFGHKXZ';
-  const startDelay = 140, dur = 510;
+  const startDelay = 140;
+  const dur = Math.max(200, (revealMs || 650) - startDelay);
   const t0 = performance.now();
 
   const l1El = document.getElementById('hero-l1');
@@ -72,25 +93,42 @@ function bootHeroName(h1El) {
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 
-  function reveal(word, t) {
-    return word.split('').map((ch, i) => {
-      const lock = 0.32 + (i / word.length) * 0.68;
-      if (t >= lock) return ch;
-      if (t < lock - 0.42) return ' ';
-      return glyphs[(Math.random() * glyphs.length) | 0];
-    }).join('');
+  function buildCells(el, word) {
+    el.textContent = '';
+    return word.split('').map(() => {
+      const cell = document.createElement('span');
+      cell.className = 'name-glyph';
+      el.appendChild(cell);
+      return cell;
+    });
+  }
+
+  const cells1 = buildCells(l1El, F1);
+  const cells2 = buildCells(l2El, F2);
+
+  function paint(word, cells, t) {
+    for (let index = 0; index < word.length; index++) {
+      const cell = cells[index];
+      const lock = 0.32 + (index / word.length) * 0.68;
+
+      if (t >= lock) {
+        if (!cell.classList.contains('is-set')) {
+          cell.textContent = word[index];
+          cell.classList.add('is-set');
+        }
+      } else if (t < lock - 0.42) {
+        cell.textContent = ' ';
+      } else {
+        cell.textContent = glyphs[(Math.random() * glyphs.length) | 0];
+      }
+    }
   }
 
   const tick = () => {
     const t = clamp((performance.now() - t0 - startDelay) / dur, 0, 1);
-    if (t >= 1) {
-      l1El.textContent = F1;
-      l2El.textContent = F2;
-      return;
-    }
-    l1El.textContent = reveal(F1, t);
-    l2El.textContent = reveal(F2, t);
-    requestAnimationFrame(tick);
+    paint(F1, cells1, t);
+    paint(F2, cells2, t);
+    if (t < 1) requestAnimationFrame(tick);
   };
 
   requestAnimationFrame(tick);

@@ -3,10 +3,12 @@
   function iconImg(url, size) {
     if (!url) return null;
     const img = document.createElement('img');
-    img.src    = url;
-    img.alt    = '';
-    img.width  = size;
-    img.height = size;
+    img.loading  = 'lazy';
+    img.decoding = 'async';
+    img.src      = url;
+    img.alt      = '';
+    img.width    = size;
+    img.height   = size;
     return img;
   }
 
@@ -16,8 +18,8 @@
 
     const navItems = [
       { label: 'skills',     id: 'skills' },
-      { label: 'experience', id: 'experience' },
       { label: 'projects',   id: 'work' },
+      { label: 'experience', id: 'experience' },
       { label: 'education',  id: 'education' },
       { label: 'contact',    id: 'contact' },
     ];
@@ -48,7 +50,17 @@
       const span = document.createElement('span');
       span.className = 'tag';
       const img = iconImg(t.icon, 14);
-      if (img) span.appendChild(img);
+      if (img) {
+        const slug = /simpleicons\.org\/([^/]+)\//.exec(t.icon || '');
+        if (slug) {
+          const baseSrc = img.src;
+          span.addEventListener('mouseenter', () => {
+            img.src = 'https://cdn.simpleicons.org/' + slug[1] + '/' + currentLilacHex();
+          });
+          span.addEventListener('mouseleave', () => { img.src = baseSrc; });
+        }
+        span.appendChild(img);
+      }
       span.append(t.label);
       toolsEl.appendChild(span);
     });
@@ -82,7 +94,10 @@
       org.href       = x.url;
       org.target     = '_blank';
       org.rel        = 'noopener';
-      org.innerHTML  = x.org + ' <span class="arrow">↗</span>';
+      const orgWords = x.org.split(' ');
+      const orgTail  = orgWords.pop();
+      const orgHead  = orgWords.length ? orgWords.join(' ') + ' ' : '';
+      org.innerHTML  = orgHead + '<span class="arrow-wrap">' + orgTail + '&nbsp;<span class="arrow">↗</span></span>';
 
       const role  = document.createElement('div');
       role.className   = 'exp-role';
@@ -116,7 +131,7 @@
 
     PORTFOLIO.projects.forEach(p => {
       const card = document.createElement('a');
-      card.className = 'project-card';
+      card.className = p.featured ? 'project-card is-featured' : 'project-card';
       card.href      = p.url;
       card.target    = '_blank';
       card.rel       = 'noopener';
@@ -125,9 +140,12 @@
       date.className   = 'project-date';
       date.textContent = p.date;
 
+      const nameWords = p.name.split(' ');
+      const nameTail  = nameWords.pop();
+      const nameHead  = nameWords.length ? nameWords.join(' ') + ' ' : '';
       const name = document.createElement('span');
-      name.className   = 'project-name';
-      name.textContent = p.name;
+      name.className = 'project-name';
+      name.innerHTML = nameHead + '<span class="arrow-wrap">' + nameTail + '&nbsp;<span class="arrow">↗</span></span>';
 
       const type = document.createElement('div');
       type.className   = 'project-type';
@@ -139,28 +157,42 @@
 
       const tech = document.createElement('div');
       tech.className = 'project-tech';
+      const techIcons = [];
       p.tech.forEach(label => {
         const badge = document.createElement('span');
         badge.className = 'tech-badge';
         const slug = PORTFOLIO.techIcons[label];
         if (slug) {
           const img = iconImg('https://cdn.simpleicons.org/' + slug + '/8b8d98', 12);
-          if (img) badge.appendChild(img);
+          if (img) {
+            badge.appendChild(img);
+            techIcons.push({ img: img, slug: slug });
+          }
         }
         badge.append(label);
         tech.appendChild(badge);
       });
 
-      const link = document.createElement('span');
-      link.className   = 'project-link';
-      link.textContent = 'view on github ↗';
+      card.addEventListener('mouseenter', () => {
+        const lilac = currentLilacHex();
+        techIcons.forEach(t => { t.img.src = 'https://cdn.simpleicons.org/' + t.slug + '/' + lilac; });
+      });
+      card.addEventListener('mouseleave', () => {
+        techIcons.forEach(t => { t.img.src = 'https://cdn.simpleicons.org/' + t.slug + '/8b8d98'; });
+      });
+
+      if (p.featured) {
+        const flag = document.createElement('span');
+        flag.className = 'project-flag';
+        flag.textContent = 'FEATURED';
+        card.appendChild(flag);
+      }
 
       card.appendChild(date);
       card.appendChild(name);
       card.appendChild(type);
       card.appendChild(desc);
       card.appendChild(tech);
-      card.appendChild(link);
       grid.appendChild(card);
     });
   }
@@ -200,6 +232,35 @@
     });
   }
 
+  function syncBackgroundHeight() {
+    if (!("ResizeObserver" in window)) return;
+
+    const root = document.getElementById("root");
+    if (!root) return;
+
+    document.body.style.setProperty("--bg-h", root.offsetHeight + "px");
+  }
+
+  function initBackgroundSizing() {
+    if (!("ResizeObserver" in window)) return;
+
+    const root = document.getElementById("root");
+    if (!root) return;
+
+    let syncTimer = null;
+    const rootObserver = new ResizeObserver(() => {
+      const sectionIsAnimating = document.querySelector(".section-body.is-animating") !== null;
+
+      if (sectionIsAnimating) return;
+
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(syncBackgroundHeight, 100);
+    });
+
+    rootObserver.observe(root);
+    syncBackgroundHeight();
+  }
+
   function initSections() {
     document.querySelectorAll('.section-header').forEach(header => {
       const body = header.nextElementSibling;
@@ -208,26 +269,82 @@
       header.classList.add('is-open');
       body.classList.add('is-open');
 
+      body.addEventListener('transitionend', (e) => {
+        const rowsFinished = e.target === body && e.propertyName === 'grid-template-rows';
+
+        if (!rowsFinished) return;
+
+        body.classList.remove('is-animating');
+        syncBackgroundHeight();
+      });
+
       header.addEventListener('click', () => {
+        body.classList.add('is-animating');
+
         const open = header.classList.toggle('is-open');
         body.classList.toggle('is-open', open);
       });
     });
   }
 
+  function initSectionReveals() {
+    const revealEls = document.querySelectorAll('.section-reveal');
+
+    if (!('IntersectionObserver' in window)) {
+      revealEls.forEach(el => el.classList.add('is-revealed'));
+      return;
+    }
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+
+        entry.target.classList.add('is-revealed');
+        revealObserver.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -10% 0px' });
+
+    revealEls.forEach(el => revealObserver.observe(el));
+  }
+
+  function coreLitMs() {
+    const schema = window.CURIE_ANIM_SCHEMA || {};
+    const read = (k) => {
+      const s = schema[k];
+      if (!s) return 0;
+      let v = animCfg[k];
+      if (v == null || v === '') v = s.def;
+      v = +v;
+      if (!isFinite(v)) v = s.def;
+      return v < s.min ? s.min : v > s.max ? s.max : v;
+    };
+
+    const arriveMs  = read('bootDurationMs') * read('bootArriveFrac');
+    const ingressMs = read('bootIngressMs');
+    const fillMs    = read('bootFillMs');
+    const fullFrac  = read('coreFullFrac');
+    const fillToFullMs = (1 - Math.pow(1 - fullFrac, 1 / 3)) * fillMs;
+
+    return arriveMs + ingressMs + fillToFullMs;
+  }
+
   function initHero() {
     const h1El = document.getElementById('hero-name');
-    if (h1El) bootHeroName(h1El);
+    if (h1El) bootHeroName(h1El, coreLitMs());
 
     const countEl = document.getElementById('hero-count');
     if (countEl) {
-      setTimeout(() => animateHeroCount(countEl, PORTFOLIO.playerVisits), 520);
+      animateHeroCount(countEl, PORTFOLIO.playerVisits, coreLitMs());
     }
 
     const cmdEl   = document.getElementById('hero-cmd-text');
     const rotorEl = document.getElementById('hero-rotor');
     if (cmdEl && rotorEl) {
-      setTimeout(() => typeHero(cmdEl, () => startRotor(rotorEl)), 1180);
+      setTimeout(() => typeHero(cmdEl, () => {
+        startRotor(rotorEl);
+        const tip = document.getElementById('hero-prompt-tip');
+        if (tip) tip.classList.add('is-armed');
+      }), 1180);
     }
 
     const workBtn    = document.getElementById('hero-work-btn');
@@ -236,9 +353,12 @@
     if (contactBtn) contactBtn.addEventListener('click', () => scrollToSection('contact'));
 
     const promptEl = document.getElementById('hero-prompt');
+    const promptTipEl = document.getElementById('hero-prompt-tip');
     if (promptEl) {
-      promptEl.addEventListener('click', () => termWin.open());
-      promptEl.addEventListener('keydown', e => { if (e.key === 'Enter') termWin.open(); });
+      const dismissTip = () => { if (promptTipEl) promptTipEl.classList.add('is-dismissed'); };
+
+      promptEl.addEventListener('click', () => { termWin.open(); dismissTip(); });
+      promptEl.addEventListener('keydown', e => { if (e.key === 'Enter') { termWin.open(); dismissTip(); } });
     }
   }
 
@@ -316,6 +436,14 @@
     const c = n => ('0' + Math.max(0, Math.min(255, Math.round(n))).toString(16)).slice(-2);
     return '#' + c(r) + c(g) + c(b);
   }
+
+  function currentLilacHex() {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--purple-rgb');
+    const parts = raw.split(',').map(n => parseInt(n, 10));
+    if (parts.length !== 3 || parts.some(isNaN)) return '9d86ff';
+    const lilac = lighten({ r: parts[0], g: parts[1], b: parts[2] }, 0.34);
+    return rgbToHex(lilac.r, lilac.g, lilac.b).slice(1);
+  }
   function rgbToHsv(r, g, b) {
     r /= 255; g /= 255; b /= 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
@@ -343,6 +471,27 @@
   function hsvToHex(h, s, v) { const c = hsvToRgb(h, s, v); return rgbToHex(c.r, c.g, c.b); }
   function hexToHsv(hex) { const c = hexToRgb(hex) || { r: 104, g: 71, b: 222 }; return rgbToHsv(c.r, c.g, c.b); }
 
+  function prefetchIconTints() {
+    const lilac = currentLilacHex();
+    const slugs = new Set();
+
+    (PORTFOLIO.tools || []).forEach(t => {
+      const m = /simpleicons\.org\/([^/]+)\//.exec(t.icon || '');
+      if (m) slugs.add(m[1]);
+    });
+    Object.values(PORTFOLIO.techIcons || {}).forEach(slug => { if (slug) slugs.add(slug); });
+
+    slugs.forEach(slug => {
+      new Image().src = 'https://cdn.simpleicons.org/' + slug + '/' + lilac;
+    });
+  }
+
+  let tintWarmTimer = null;
+  function queueIconTintPrefetch() {
+    clearTimeout(tintWarmTimer);
+    tintWarmTimer = setTimeout(prefetchIconTints, 400);
+  }
+
   function applyAccent(hex) {
     const rgb = hexToRgb(hex);
     if (!rgb) return;
@@ -355,8 +504,16 @@
 
     const lilacHex = rgbToHex(lilac.r, lilac.g, lilac.b).slice(1);
     document.querySelectorAll('img[data-icon-slug]').forEach(img => {
-      img.src = 'https://cdn.simpleicons.org/' + img.dataset.iconSlug + '/' + lilacHex;
+      const url = 'https://cdn.simpleicons.org/' + img.dataset.iconSlug + '/' + lilacHex;
+      img.dataset.pendingTint = url;
+      const loader = new Image();
+      loader.onload = () => {
+        if (img.dataset.pendingTint === url) img.src = url;
+      };
+      loader.src = url;
     });
+
+    queueIconTintPrefetch();
 
     if (circuitSyncColors) circuitSyncColors();
   }
@@ -878,6 +1035,7 @@
   function toggleSettingsButton() {
     const next = !settingsButtonShown();
     try { localStorage.setItem('curieSettingsButton', next ? '1' : '0'); } catch (e) {}
+    if (next) ensureTweakPanel();
     applySettingsButtonVisibility();
     if (!next) {
       const d = document.getElementById('curie-drawer');
@@ -922,9 +1080,14 @@
 
   if (canvas) {
     const circuit = initCircuit(canvas, () => animCfg, () => true);
-    replayBoot        = circuit.replayBoot;
     circuitSyncColors = circuit.syncColors;
     circuitSyncColors();
+
+    replayBoot = () => {
+      circuit.replayBoot();
+      const h1El = document.getElementById('hero-name');
+      if (h1El) bootHeroName(h1El, coreLitMs());
+    };
   }
 
   const termBody  = document.getElementById('term-body');
@@ -992,9 +1155,6 @@
   const overlay = document.getElementById('palette-overlay');
   if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) palette.close(); });
 
-  const navSearch = document.getElementById('nav-search');
-  if (navSearch) navSearch.addEventListener('click', () => palette.open());
-
   initKonami(() => term.unlockRoot());
 
   buildNav();
@@ -1007,9 +1167,21 @@
   if (animCfg.accent) applyAccent(animCfg.accent);
   buildChips(term);
   initSections();
+  initSectionReveals();
+  initBackgroundSizing();
   initHero();
   initLogo();
 
-  buildTweakPanel(animCfg, replayBoot);
+  let tweaksBuilt = false;
+  function ensureTweakPanel() {
+    if (tweaksBuilt) return;
+    tweaksBuilt = true;
+    buildTweakPanel(animCfg, replayBoot);
+  }
+
+  if (settingsButtonShown()) ensureTweakPanel();
+
+  if ('requestIdleCallback' in window) requestIdleCallback(prefetchIconTints);
+  else setTimeout(prefetchIconTints, 1200);
 
 })();

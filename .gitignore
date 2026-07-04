@@ -10,3 +10,5 @@
 
 # Dev-only project notes (local paths)
 CLAUDE.md
+prompts/newproject.md
+.gitignore

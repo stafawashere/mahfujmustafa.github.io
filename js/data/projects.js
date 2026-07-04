@@ -2,13 +2,24 @@ window.PORTFOLIO = window.PORTFOLIO || {};
 
 window.PORTFOLIO.projects = [
   {
+    id:   'psychedelic-model',
+    name: 'Psychedelic Model',
+    type: 'ML & Neuroscience Research',
+    date: 'JUN 2026 – JUL 2026',
+    url:  'https://github.com/stafawashere/psychedelic-model-research',
+    tech: ['Python', 'PyTorch'],
+    featured: true,
+    desc: 'An experiment that drives a diffusion model with only knobs mapped to real brain variables — sensory precision, cortical gain — then watches whether the visual arc of a DMT trip emerges on its own. Nothing is drawn by hand.',
+  },
+  {
     id:   'distribution-network',
     name: 'Distribution Network',
     type: 'Full-Stack Web App',
     date: 'MAR 2026',
     url:  'https://github.com/stafawashere/dms',
     tech: ['Next.js', 'TypeScript', 'PostgreSQL', 'Prisma'],
-    desc: 'A web app for managing distributors and the resellers under them. Admins and resellers each get their own portal, with inventory tracking, bulk pricing tiers, and a dashboard for sales and revenue.',
+    featured: true,
+    desc: 'A platform for distributors and the resellers beneath them, where each side logs into its own scoped portal — inventory tracking, bulk pricing tiers, and a sales-and-revenue dashboard.',
   },
   {
     id:   'allusion',
@@ -20,6 +31,15 @@ window.PORTFOLIO.projects = [
     desc: 'I pulled apart the game Rivals to find weaknesses in its anti-cheat, combat, and rendering. Everything was reported to the developers before I made any of it public.',
   },
   {
+    id:   'ledger',
+    name: 'Ledger',
+    type: 'Discord Bot',
+    date: 'FEB 2026',
+    url:  'https://github.com/stafawashere/ledger',
+    tech: ['Python', 'TinyDB'],
+    desc: 'A Discord bot for tracking balances, debts, and inventory — driven by slash commands and buttons, with a full history you can filter and export.',
+  },
+  {
     id:   'disky',
     name: 'Disky',
     type: 'Discord API Wrapper',
@@ -29,24 +49,6 @@ window.PORTFOLIO.projects = [
     desc: 'A Discord library I built from scratch, talking straight to Discord over WebSockets and HTTP instead of leaning on existing wrappers. It handles the connection, sessions, and events all on its own.',
   },
   {
-    id:   'ledger',
-    name: 'Ledger',
-    type: 'Discord Bot',
-    date: 'FEB 2026',
-    url:  'https://github.com/stafawashere/ledger',
-    tech: ['Python', 'TinyDB'],
-    desc: 'A Discord bot for keeping track of balances, debts, and inventory. You run it with slash commands and buttons, and it keeps a full history you can filter and export whenever you need.',
-  },
-  {
-    id:   'psychedelic-model',
-    name: 'Psychedelic Model',
-    type: 'ML Research',
-    date: 'JUN 2026',
-    url:  'https://github.com/stafawashere/psychedelic-model',
-    tech: ['Python', 'PyTorch'],
-    desc: 'An experiment in making trippy images by changing how an AI model sees, instead of just adding filters on top. It loosens the model\'s grip on reality until its own learned patterns take over the picture.',
-  },
-  {
     id:   'portfolio',
     name: 'mahfujmustafa.dev',
     type: 'Portfolio Website',
@@ -54,5 +56,5 @@ window.PORTFOLIO.projects = [
     url:  'https://github.com/stafawashere/stafawashere.github.io',
     tech: ['JavaScript', 'HTML5 Canvas'],
     desc: 'This site. No frameworks, just plain JavaScript — including a terminal you can actually type into with 35+ commands, and the animated circuit board running behind everything.',
-  },
+  }
 ];

@@ -12,7 +12,10 @@ body {
 body::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--bg-h, 100%);
   z-index: -1;
   pointer-events: none;
   background-color: var(--bg);
@@ -25,20 +28,20 @@ body::before {
     linear-gradient(rgba(var(--purple-rgb), 0.032) 1px, transparent 1px),
     linear-gradient(90deg, rgba(var(--purple-rgb), 0.032) 1px, transparent 1px),
 
-    radial-gradient(95vw 72vh at 50% -10vh, rgba(var(--purple-rgb), 0.09), transparent 72%),
-    radial-gradient(90vw 68vh at 84% 82vh,  rgba(86, 128, 255, 0.045), transparent 74%),
-    radial-gradient(92vw 70vh at 10% 178vh, rgba(150, 96, 240, 0.05),  transparent 74%),
-    radial-gradient(92vw 70vh at 90% 286vh, rgba(var(--purple-rgb), 0.05), transparent 74%),
-    radial-gradient(92vw 70vh at 14% 396vh, rgba(var(--lilac-rgb), 0.04), transparent 74%),
-    radial-gradient(92vw 70vh at 86% 506vh, rgba(120, 82, 210, 0.05),  transparent 74%),
-    radial-gradient(92vw 70vh at 20% 616vh, rgba(86, 128, 255, 0.04),  transparent 74%),
+    radial-gradient(66vw 50vh at 50% -12vh, rgba(var(--purple-rgb), 0.042), transparent 70%),
+    radial-gradient(60vw 48vh at 84% 82vh,  rgba(var(--lilac-rgb), 0.022), transparent 72%),
+    radial-gradient(62vw 50vh at 10% 178vh, rgba(var(--purple-rgb), 0.024),  transparent 72%),
+    radial-gradient(62vw 50vh at 90% 286vh, rgba(var(--purple-rgb), 0.024), transparent 72%),
+    radial-gradient(62vw 50vh at 14% 396vh, rgba(var(--lilac-rgb), 0.02), transparent 72%),
+    radial-gradient(62vw 50vh at 86% 506vh, rgba(var(--purple-rgb), 0.024),  transparent 72%),
+    radial-gradient(62vw 50vh at 20% 616vh, rgba(var(--lilac-rgb), 0.02),  transparent 72%),
 
     linear-gradient(180deg,
-      rgba(var(--purple-rgb), 0.05) 0%,
-      rgba(70, 50, 140, 0.04) 30%,
-      rgba(100, 64, 176, 0.045) 55%,
-      rgba(56, 46, 128, 0.04) 78%,
-      rgba(var(--purple-rgb), 0.05) 100%);
+      rgba(var(--purple-rgb), 0.028) 0%,
+      rgba(var(--purple-rgb), 0.01) 28%,
+      rgba(var(--lilac-rgb), 0.014) 55%,
+      rgba(var(--purple-rgb), 0.01) 80%,
+      rgba(var(--purple-rgb), 0.028) 100%);
   background-size:
     220px 220px,
     26px 26px,
@@ -93,7 +96,10 @@ body::after {
   color: var(--text-bright);
   font-family: var(--font);
   min-height: 100vh;
+  /* clip, not hidden: overflow-x alone turns this into a scroll container,
+     and the section-reveal translateY makes it grow a second scrollbar */
   overflow-x: hidden;
+  overflow: clip;
   background: transparent;
 }
 

@@ -182,6 +182,7 @@ class TermWindow {
   }
 
   _bindResize() {
+    let settleTimer = null;
     window.addEventListener('resize', () => {
       const w  = Math.min(940, window.innerWidth - 24);
       const maxX = Math.max(12, window.innerWidth  - 90);
@@ -190,7 +191,8 @@ class TermWindow {
       this.state.x = Math.min(this.state.x, maxX);
       this.state.y = Math.min(this.state.y, maxY);
       this._applyState();
-      this._save();
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => this._save(), 150);
     });
   }
 }

@@ -44,6 +44,9 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
   const FPS_CAP      = 60;
   const FRAME_MIN_MS = 1000 / FPS_CAP - 2;
 
+  const AMBIENT_FPS    = 30;
+  const AMBIENT_MIN_MS = 1000 / AMBIENT_FPS - 2;
+
   let PURPLE = '104, 71, 222';
   let LILAC  = '157, 134, 255';
   let PRGB   = [104, 71, 222];
@@ -78,7 +81,7 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
 
   const st = {
     mx: -9999, my: -9999, tmx: -9999, tmy: -9999,
-    lastY: window.scrollY, energy: 0, alpha: 0, last: 0, lastPaint: 0, par: 0,
+    lastY: window.scrollY, energy: 0, alpha: 0, last: 0, lastPaint: 0, par: 0, ambient: false,
     scrollTs: -9999, interactive: false,
     heroR: 0, railProg: 0, _dt: 1,
     boot: 0, bootStart: -1, _bootIgnited: false,
@@ -630,7 +633,8 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
     rafId = 0;
     if (!isAlive() || document.hidden) return;
 
-    if (st.lastPaint && ts - st.lastPaint < FRAME_MIN_MS) { schedule(); return; }
+    const frameMinMs = st.ambient ? AMBIENT_MIN_MS : FRAME_MIN_MS;
+    if (st.lastPaint && ts - st.lastPaint < frameMinMs) { schedule(); return; }
     st.lastPaint = ts;
     if ((frameTick++ % 20) === 0) geomDirty = true;
 
@@ -866,18 +870,28 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
     flushBloom(g.vw, g.vh);
     ctx.globalAlpha = 1;
 
-    let alive = !st.bootDone || st._exiting
-             || (g.hero && g.hero.visible)
-             || st.heroR > 0.001 || st.railProg > 0.001
-             || st.energy > 0.005
-             || dataPackets.length > 0 || tapPulses.length > 0
-             || nodesEasing;
-    if (!alive) { for (const k in spark) { alive = true; break; } }
-    if (!alive && st.interactive) {
+    let sparkAlive = false;
+    for (const k in spark) { sparkAlive = true; break; }
+
+    let easing = false;
+    if (st.interactive) {
       const parTarget = clamp((st.mx - g.vw / 2) * -cfg('parallaxAmt'), -9, 9);
-      alive = Math.abs(st.tmx - st.mx) > 0.5 || Math.abs(st.tmy - st.my) > 0.5
-           || Math.abs(parTarget - st.par) > 0.01;
+      easing = Math.abs(st.tmx - st.mx) > 0.5 || Math.abs(st.tmy - st.my) > 0.5
+            || Math.abs(parTarget - st.par) > 0.01;
     }
+
+    const activity = !st.bootDone || st._exiting
+                  || st.heroR > 0.001 || st.railProg > 0.001
+                  || st.energy > 0.005
+                  || dataPackets.length > 0 || tapPulses.length > 0
+                  || nodesEasing || sparkAlive
+                  || (burstT != null && burstT < 1)
+                  || easing;
+
+    const alive = activity || (g.hero && g.hero.visible);
+
+    // ambient = nothing is easing, only the idle dots are drifting; tick at half rate
+    st.ambient = alive && !activity;
     if (alive) schedule();
   }
 
