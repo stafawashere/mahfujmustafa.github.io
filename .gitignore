@@ -22,3 +22,6 @@ perf/RESULTS.md
 perf/run.log
 perf/package.json
 .gitignore
+perf/harness.mjs
+perf/harness.mjs
+.gitignore

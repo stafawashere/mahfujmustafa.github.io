@@ -111,8 +111,14 @@ function bootLiquidTitle(revealMs) {
   if (!line1Els.length || !line2Els.length) return;
 
   const ink      = svg.querySelector(".t-ink");
-  const warpEls  = svg.querySelectorAll("#liquid-inflate feDisplacementMap, #liquid-glint feDisplacementMap");
-  const blurEls  = svg.querySelectorAll("#liquid-inflate feGaussianBlur, #liquid-glint feGaussianBlur");
+  // Boot mutates only the inflate chain; shadow + glint layers are hidden during
+  // the scramble so each tick rasters one filter chain instead of three (F16).
+  const warpEls  = svg.querySelectorAll("#liquid-inflate feDisplacementMap");
+  const blurEls  = svg.querySelectorAll("#liquid-inflate feGaussianBlur");
+  const glintWarpEls = svg.querySelectorAll("#liquid-glint feDisplacementMap");
+  const glintBlurEls = svg.querySelectorAll("#liquid-glint feGaussianBlur");
+  const shadowLayer  = svg.querySelector('g[filter="url(#liquid-shadow)"]');
+  const glintLayer   = svg.querySelector('g[filter="url(#liquid-glint)"]');
   const lightEls = svg.querySelectorAll(".mv-light");
 
   const diffuseEls = svg.querySelectorAll("feDiffuseLighting");
@@ -151,12 +157,17 @@ function bootLiquidTitle(revealMs) {
   const settle = () => {
     setLines(F1, F2);
     setWarp(LIQUID_REST_WARP.scale, LIQUID_REST_WARP.blur);
+    glintWarpEls.forEach((el) => el.setAttribute("scale", LIQUID_REST_WARP.scale));
+    glintBlurEls.forEach((el) => el.setAttribute("stdDeviation", LIQUID_REST_WARP.blur));
     setLighting(LIQUID_REST_LIGHT.diffuse, LIQUID_REST_LIGHT.sheen, LIQUID_REST_LIGHT.glint);
+    if (shadowLayer) shadowLayer.style.display = "";
+    if (glintLayer)  glintLayer.style.display = "";
     if (ink) ink.style.opacity = "";
   };
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReducedMotion) {
+  const lowPower = (navigator.hardwareConcurrency || 8) <= 4;
+  if (prefersReducedMotion || lowPower) {
     settle();
     return;
   }
@@ -165,7 +176,7 @@ function bootLiquidTitle(revealMs) {
   const totalDur = Math.max(400, (revealMs || 650) - startDelay);
   const sweepDur = Math.min(760, Math.round(totalDur * 0.45));
   const settleDur = Math.max(200, totalDur - sweepDur);
-  const tickMs = 33;
+  const tickMs = 50; // 20Hz — the liquid wobble reads the same, at 2/3 the raster load
   const t0 = performance.now();
   let lastTick = 0;
   let sweepStart = 0;
@@ -174,6 +185,13 @@ function bootLiquidTitle(revealMs) {
   setWarp(LIQUID_MOLTEN_WARP.scale, LIQUID_MOLTEN_WARP.blur);
   setLighting(hotLight.diffuse, hotLight.sheen, hotLight.glint);
   if (ink) ink.style.opacity = "0";
+
+  // Park the glint chain at rest values and skip rastering shadow + glint
+  // entirely while the scramble runs; settle() reveals them for the sweep.
+  glintWarpEls.forEach((el) => el.setAttribute("scale", LIQUID_REST_WARP.scale));
+  glintBlurEls.forEach((el) => el.setAttribute("stdDeviation", LIQUID_REST_WARP.blur));
+  if (shadowLayer) shadowLayer.style.display = "none";
+  if (glintLayer)  glintLayer.style.display = "none";
 
   const sweepStartY = Math.round((svg.viewBox.baseVal.height || 370) * 0.35);
   lightEls.forEach((light) => { light.setAttribute("x", -140); light.setAttribute("y", sweepStartY); });
