@@ -5,7 +5,7 @@ Object.assign(window.PORTFOLIO, {
     'Reverse Engineering',
     'Security Analysis',
     'Full-Stack Development',
-    'Live Game Ops',
+    'Live Game Operations',
   ],
 
   coreStack: [
@@ -15,7 +15,6 @@ Object.assign(window.PORTFOLIO, {
     { label: 'Node.js',    icon: 'https://cdn.simpleicons.org/nodedotjs/9d86ff' },
     { label: 'PostgreSQL', icon: 'https://cdn.simpleicons.org/postgresql/9d86ff' },
     { label: 'React',      icon: 'https://cdn.simpleicons.org/react/9d86ff' },
-    { label: 'discord.py', icon: 'https://cdn.simpleicons.org/python/9d86ff' },
     { label: 'PyTorch',    icon: 'https://cdn.simpleicons.org/pytorch/9d86ff' },
   ],
 

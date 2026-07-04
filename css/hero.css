@@ -72,25 +72,25 @@
   --tip-border: color-mix(in srgb, var(--lilac) 52%, #0c0709);
   position: absolute;
   top: 50%;
-  left: calc(100% + 22px);
+  left: calc(100% + 18px);
   transform: translateY(-50%);
-  font-size: 12.5px;
+  font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--lilac);
   background: var(--tip-bg);
   border: 1px solid var(--tip-border);
-  border-radius: 9px;
-  padding: 8px 15px;
+  border-radius: 7px;
+  padding: 5px 11px;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.5),
-    0 0 18px rgba(var(--purple-rgb), 0.28),
-    inset 0 1px 0 rgba(var(--lilac-rgb), 0.12);
-  text-shadow: 0 0 8px rgba(var(--lilac-rgb), 0.3);
+    0 4px 14px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(var(--purple-rgb), 0.22),
+    inset 0 1px 0 rgba(var(--lilac-rgb), 0.1);
+  text-shadow: 0 0 6px rgba(var(--lilac-rgb), 0.25);
   transition: opacity .16s ease-in, transform .16s ease-in;
 }
 
@@ -101,22 +101,22 @@
 #hero-prompt-tip::before {
   content: "";
   position: absolute;
-  left: -10px;
+  left: -8px;
   top: 50%;
   transform: translateY(-50%);
   border-style: solid;
-  border-width: 9px 9px 9px 0;
+  border-width: 7px 7px 7px 0;
   border-color: transparent var(--tip-border) transparent transparent;
 }
 
 #hero-prompt-tip::after {
   content: "";
   position: absolute;
-  left: -8px;
+  left: -6px;
   top: 50%;
   transform: translateY(-50%);
   border-style: solid;
-  border-width: 8px 8px 8px 0;
+  border-width: 6px 6px 6px 0;
   border-color: transparent var(--tip-bg) transparent transparent;
 }
 

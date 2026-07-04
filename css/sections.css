@@ -144,6 +144,9 @@
 .experience-list { display: flex; flex-direction: column; gap: 14px; }
 
 .exp-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 24px;
@@ -152,14 +155,58 @@
   background-image: var(--dot-grid);
   background-size: var(--dot-grid-size);
   border-radius: 12px;
-  padding: 26px 28px;
-  transition: border-color .18s, background-color .18s;
+  padding: 26px 28px 26px 30px;
+  transition: border-color .22s ease,
+              background-color .22s ease,
+              transform .28s cubic-bezier(0.3, 1.25, 0.5, 1),
+              box-shadow .28s ease;
+}
+
+.exp-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(180deg,
+              transparent,
+              rgba(var(--purple-rgb), 0.5) 18%,
+              rgba(var(--purple-rgb), 0.5) 82%,
+              transparent);
+  opacity: 0.28;
+  transform: scaleY(0.72);
+  transform-origin: center;
+  transition: opacity .28s ease, width .28s ease, transform .32s cubic-bezier(.22, 1, .36, 1);
+}
+
+.exp-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(58% 78% at 0% 0%,
+              rgba(var(--purple-rgb), 0.1), transparent 70%);
+  opacity: 0;
+  transition: opacity .3s ease;
 }
 
 .exp-card:hover {
-  border-color: color-mix(in srgb, var(--purple) 28%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--purple) 34%, var(--bg-card));
   background-color: var(--bg-card-alt);
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px -30px rgba(0, 0, 0, 0.7),
+              0 10px 26px -18px rgba(var(--purple-rgb), 0.32);
 }
+
+.exp-card:hover::before {
+  opacity: 1;
+  width: 3px;
+  transform: scaleY(1);
+}
+
+.exp-card:hover::after { opacity: 1; }
 
 .exp-org {
   font-size: 16px;
@@ -188,27 +235,76 @@
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 6px;
+  transition: color .2s ease;
 }
 
+.exp-card:hover .exp-role { color: var(--text-body); }
+
 .exp-dates {
-  font-size: 12px;
-  color: var(--text-faint);
-  margin-top: 10px;
-  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-top: 14px;
+  letter-spacing: 0.05em;
+  padding: 4px 10px 4px 9px;
+  border: 1px solid var(--border-card);
+  border-radius: 999px;
+  transition: border-color .22s ease, color .22s ease;
+}
+
+.exp-dates::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--purple);
+  opacity: 0.65;
+  transition: opacity .22s ease, box-shadow .22s ease;
+}
+
+.exp-card:hover .exp-dates {
+  border-color: color-mix(in srgb, var(--purple) 30%, var(--border));
+  color: var(--text-muted);
+}
+
+.exp-card:hover .exp-dates::before {
+  opacity: 1;
+  box-shadow: 0 0 7px rgba(var(--purple-rgb), 0.8);
 }
 
 .exp-points {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
 }
 
 .exp-points li {
+  position: relative;
+  padding-left: 20px;
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--text-body);
+}
+
+.exp-points li::before {
+  content: '▹';
+  position: absolute;
+  left: 0;
+  top: -0.5px;
+  color: var(--purple);
+  font-size: 12px;
+  opacity: 0.5;
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.exp-card:hover .exp-points li::before {
+  opacity: 1;
+  transform: translateX(2px);
 }
 
 .projects-grid {
@@ -398,6 +494,13 @@
     transform: none;
     transition: none;
   }
+
+  .exp-card:hover,
+  .edu-card:hover { transform: none; }
+  .exp-card:hover::before,
+  .edu-card:hover::before { transform: scaleY(1); }
+  .exp-card:hover .exp-points li::before,
+  .edu-card:hover .edu-name::after { transform: none; }
 }
 
 .project-flag {
@@ -516,19 +619,64 @@
 
 .edu-card {
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
   border: 1px solid var(--border);
   background-color: var(--bg-card);
   background-image: var(--dot-grid);
   background-size: var(--dot-grid-size);
   border-radius: 12px;
-  padding: 26px;
-  transition: border-color .18s, background-color .18s;
+  padding: 26px 26px 26px 28px;
+  transition: border-color .22s ease,
+              background-color .22s ease,
+              transform .28s cubic-bezier(0.3, 1.25, 0.5, 1),
+              box-shadow .28s ease;
+}
+
+.edu-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(180deg,
+              transparent,
+              rgba(var(--purple-rgb), 0.5) 18%,
+              rgba(var(--purple-rgb), 0.5) 82%,
+              transparent);
+  opacity: 0.28;
+  transform: scaleY(0.72);
+  transition: opacity .28s ease, width .28s ease, transform .32s cubic-bezier(.22, 1, .36, 1);
+}
+
+.edu-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(60% 80% at 0% 0%,
+              rgba(var(--purple-rgb), 0.1), transparent 70%);
+  opacity: 0;
+  transition: opacity .3s ease;
 }
 
 .edu-card:hover {
-  border-color: color-mix(in srgb, var(--purple) 28%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--purple) 34%, var(--bg-card));
   background-color: var(--bg-card-alt);
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px -30px rgba(0, 0, 0, 0.7),
+              0 10px 26px -18px rgba(var(--purple-rgb), 0.32);
 }
+
+.edu-card:hover::before {
+  opacity: 1;
+  width: 3px;
+  transform: scaleY(1);
+}
+
+.edu-card:hover::after { opacity: 1; }
 
 .edu-dates {
   position: absolute;
@@ -537,7 +685,10 @@
   font-size: 12px;
   color: var(--text-faint);
   white-space: nowrap;
+  transition: color .22s ease;
 }
+
+.edu-card:hover .edu-dates { color: var(--text-dim); }
 
 .edu-name {
   display: block;
@@ -550,7 +701,24 @@
   transition: color .15s;
 }
 
-.edu-name:hover { color: var(--lilac); }
+.edu-name::after {
+  content: '↗';
+  display: inline-block;
+  margin-left: 7px;
+  font-size: 0.82em;
+  color: var(--purple);
+  opacity: 0;
+  transform: translate(-3px, 2px);
+  transition: opacity .22s ease, transform .22s cubic-bezier(.22, 1, .36, 1);
+}
+
+.edu-name:hover,
+.edu-card:hover .edu-name { color: var(--lilac); }
+
+.edu-card:hover .edu-name::after {
+  opacity: 1;
+  transform: translate(0, 0);
+}
 
 .edu-kind {
   font-size: 12px;
@@ -572,13 +740,39 @@
 .contact-card {
   border: 1px solid var(--border);
   background-color: var(--bg-card);
-  background-image: var(--dot-grid);
-  background-size: var(--dot-grid-size);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 42%),
+    radial-gradient(120% 90% at 82% -10%, rgba(var(--purple-rgb), 0.09), transparent 55%),
+    var(--dot-grid);
+  background-size: auto, auto, var(--dot-grid-size);
   border-radius: 18px;
   padding: 44px;
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  box-shadow:
+    0 34px 80px -46px rgba(0, 0, 0, 0.85),
+    0 0 64px -30px rgba(var(--purple-rgb), 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.contact-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(150deg,
+              rgba(var(--purple-rgb), 0.65),
+              rgba(var(--purple-rgb), 0.14) 26%,
+              rgba(255, 255, 255, 0.05) 52%,
+              transparent 74%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
 }
 
 .contact-card-glow {
@@ -650,8 +844,9 @@
    gap: 8px;
    font-size: 12px;
    letter-spacing: 0.04em;
-   color: var(--text-faint);
-   border: 1px solid var(--border);
+   color: var(--text-muted);
+   border: 1px solid rgba(74, 222, 128, 0.22);
+   background: rgba(74, 222, 128, 0.055);
    border-radius: 999px;
    padding: 7px 14px;
 }
@@ -770,9 +965,16 @@
 }
 
 .btn-cta-secondary {
-   font-size: 15px;
-   padding: 15px 22px;
-   border-radius: 11px;
+   height: 40.8px;
+   align-self: flex-end;
+   font-size: 12.75px;
+   padding: 0 18.7px;
+   border-radius: 9.35px;
+}
+
+.btn-cta-secondary svg {
+   width: 17px;
+   height: 17px;
 }
 
 .btn-cta:focus-visible,

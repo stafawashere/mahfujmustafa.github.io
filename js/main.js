@@ -471,7 +471,7 @@
       setTimeout(() => typeHero(cmdEl, () => {
         startRotor(rotorEl);
         const tip = document.getElementById('hero-prompt-tip');
-        if (tip && !terminalOpenedBefore()) tip.classList.add('is-armed');
+        if (tip) tip.classList.add('is-armed');
       }), 1180);
     }
 
