@@ -60,7 +60,7 @@
 
    .hero-meta { gap: 8px 16px; }
 
-   .hero-meta .hero-email { margin-left: auto; }
+   .hero-meta .meta-right { margin-left: auto; }
 
    #hero-name { font-size: clamp(66px, 18vw, 108px); }
 
