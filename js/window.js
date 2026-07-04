@@ -90,14 +90,18 @@ class TermWindow {
     this._updateDims();
   }
 
-  _updateDims() {
+  _setDims(bodyW, bodyH) {
     const dimsEl = this.win.querySelector('#term-dims');
-    if (!dimsEl || !this.body) return;
-    const w = this.body.clientWidth - 40;
+    if (!dimsEl) return;
     const charW = 13.5 * 0.6015;
-    const cols  = Math.max(20, Math.floor(w / charW));
-    const rows  = Math.max(1,  Math.floor((this.body.clientHeight - 34) / 21.87));
+    const cols  = Math.max(20, Math.floor((bodyW - 40) / charW));
+    const rows  = Math.max(1,  Math.floor((bodyH - 34) / 21.87));
     dimsEl.textContent = cols + '×' + rows;
+  }
+
+  _updateDims() {
+    if (!this.body) return;
+    this._setDims(this.body.clientWidth, this.body.clientHeight);
   }
 
   open() {
@@ -154,7 +158,11 @@ class TermWindow {
 
     this.win.style.transition = 'none';
 
-    const move = (ev) => {
+    let pending = null, rafId = 0;
+    const flush = () => {
+      rafId = 0;
+      const ev = pending; pending = null;
+      if (!ev) return;
       const nx = ox + (ev.clientX - startX);
       const ny = oy + (ev.clientY - startY);
       const maxX = window.innerWidth  - 90;
@@ -164,10 +172,12 @@ class TermWindow {
       this.win.style.left = this.state.x + 'px';
       this.win.style.top  = this.state.y + 'px';
     };
+    const move = (ev) => { pending = ev; if (!rafId) rafId = requestAnimationFrame(flush); };
 
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
       document.body.style.userSelect = '';
       this.dragging = false;
       this.win.style.transition = '';
@@ -182,19 +192,26 @@ class TermWindow {
     if (this._isSheet()) return;
     e.preventDefault();
     const startY = e.clientY, startH = this.state.h;
+    const bodyW = this.body ? this.body.clientWidth : 0;
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'ns-resize';
 
-    const move = (ev) => {
+    let pending = null, rafId = 0;
+    const flush = () => {
+      rafId = 0;
+      const ev = pending; pending = null;
+      if (!ev) return;
       const h = Math.max(220, Math.min(860, startH + (ev.clientY - startY)));
       this.state.h = h;
       if (this.body) this.body.style.height = h + 'px';
-      this._updateDims();
+      this._setDims(bodyW, h);
     };
+    const move = (ev) => { pending = ev; if (!rafId) rafId = requestAnimationFrame(flush); };
 
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
       this._save();
@@ -207,15 +224,17 @@ class TermWindow {
   _bindResize() {
     let settleTimer = null;
     window.addEventListener('resize', () => {
-      const w  = Math.min(940, window.innerWidth - 24);
-      const maxX = Math.max(12, window.innerWidth  - 90);
-      const maxY = Math.max(56, window.innerHeight - 56);
-      this.state.w = w;
-      this.state.x = Math.min(this.state.x, maxX);
-      this.state.y = Math.min(this.state.y, maxY);
-      this._applyState();
       clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => this._save(), 150);
+      settleTimer = setTimeout(() => {
+        const w  = Math.min(940, window.innerWidth - 24);
+        const maxX = Math.max(12, window.innerWidth  - 90);
+        const maxY = Math.max(56, window.innerHeight - 56);
+        this.state.w = w;
+        this.state.x = Math.min(this.state.x, maxX);
+        this.state.y = Math.min(this.state.y, maxY);
+        this._applyState();
+        this._save();
+      }, 100);
     });
   }
 }

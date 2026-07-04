@@ -8,11 +8,6 @@
   50%       { opacity: .85; }
 }
 
-@keyframes floatGrid {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-40px); }
-}
-
 @keyframes rootScan {
   from { transform: translateY(-100%); }
   to   { transform: translateY(100vh); }
@@ -36,10 +31,44 @@
   to   { clip-path: inset(0 -2% 0 0); }
 }
 
-@keyframes bannerGlow {
-  0%, 100% { filter: drop-shadow(0 1px 14px rgba(var(--purple-rgb), 0.40)); }
-  50%       { filter: drop-shadow(0 1px 22px rgba(var(--lilac-rgb), 0.62)); }
+/* F1: glow is now a pre-blurred pseudo-element whose opacity animates
+   (compositor-only) instead of re-rasterizing a drop-shadow every frame. */
+.term-banner { position: relative; }
+.term-banner::after {
+  content: '';
+  position: absolute;
+  inset: -10px -6px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(var(--lilac-rgb), 0.34), transparent 78%);
+  animation: bannerGlowFade 4.2s ease-in-out infinite;
 }
+@keyframes bannerGlowFade {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* F9: banner intro animations as classes (were inline styles that bypassed
+   the reduced-motion media guards below). */
+.term-banner--wipe { animation: bannerWipe .9s steps(28) both; }
+.term-banner--root {
+  white-space: pre;
+  animation: bannerWipe .8s steps(26) both, rootGlitch .26s steps(2) .8s 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-banner--wipe,
+  .term-banner--root { animation: none; }
+  .term-banner::after { animation: none; opacity: 0.7; }
+}
+
+/* F2: pause the large blur(10-40px) infinite glows while their section is
+   scrolled off-screen (toggled by the IntersectionObserver in main.js).
+   content-visibility was avoided here because collapsing sections would
+   change #root.offsetHeight and break the --bg-h background sizing. */
+.fx-paused .hero-glow,
+.fx-paused .card-fx::before,
+.fx-paused .contact-card-glow { animation-play-state: paused; }
 
 .section-reveal {
    opacity: 0;

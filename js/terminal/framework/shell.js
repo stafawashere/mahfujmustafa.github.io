@@ -28,6 +28,16 @@ class Shell {
     this.education = PORTFOLIO.education.map(e => ({
       name: e.name, kind: e.kind, dates: e.dates, note: e.note,
     }));
+
+    // F10: single delegated listener instead of one per linked segment.
+    if (this.body) {
+      this.body.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-cmd], [data-open]');
+        if (!el || !this.body.contains(el)) return;
+        if (el.dataset.cmd != null) this.run(el.dataset.cmd);
+        else if (el.dataset.open != null) this.openUrl(el.dataset.open);
+      });
+    }
   }
 
   parseFlags(tokens) {
@@ -212,11 +222,11 @@ class Shell {
         span.style.cursor = 'pointer';
         span.style.textDecoration = 'underline';
         span.style.textDecorationColor = this.C.acc;
-        span.addEventListener('click', () => this.run(seg.cmd));
+        span.dataset.cmd = seg.cmd;
       }
       if (seg.open) {
         span.style.cursor = 'pointer';
-        span.addEventListener('click', () => this.openUrl(seg.open));
+        span.dataset.open = seg.open;
       }
       row.appendChild(span);
     });

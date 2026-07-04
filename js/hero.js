@@ -1,18 +1,3 @@
-function typeHero(cmdEl, onDone) {
-  const cmd = 'whoami';
-  let i = 0;
-  const tick = () => {
-    if (i <= cmd.length) {
-      cmdEl.textContent = cmd.slice(0, i);
-      i++;
-      setTimeout(tick, 65);
-    } else {
-      onDone && onDone();
-    }
-  };
-  tick();
-}
-
 function startRotor(rotorEl) {
   const words = PORTFOLIO.rotor;
   let w = 0, j = 0, deleting = false;
@@ -338,18 +323,9 @@ function initLiquidTitle() {
     }
   }
 
-  function positionHeroPrompt() {
-    const prompt = document.getElementById('hero-prompt');
-    const meta = document.querySelector('.hero-meta');
-    if (!prompt || !meta) return;
-
-    prompt.style.top = (meta.offsetTop + meta.offsetHeight + 20) + 'px';
-  }
-
   function fitTitleToViewport() {
     if (!hint) return;
 
-    positionHeroPrompt();
     layoutTitle();
 
     const vb = svg.viewBox.baseVal;
@@ -372,18 +348,6 @@ function initLiquidTitle() {
 
       svg.style.width = Math.round(targetW) + 'px';
       svg.style.maxWidth = 'none';
-    }
-
-    const prompt = document.getElementById('hero-prompt');
-    if (prompt && getComputedStyle(prompt).display !== 'none') {
-      const promptBottom = prompt.getBoundingClientRect().bottom;
-      const svgTop = svg.getBoundingClientRect().top;
-      const need = Math.max(0, promptBottom + 12 - svgTop);
-
-      const hintBottom = hint.getBoundingClientRect().bottom + window.scrollY;
-      const leftover = Math.max(0, (window.innerHeight - bottomMargin) - hintBottom);
-
-      svg.parentElement.style.paddingTop = Math.round(Math.min(need, leftover)) + 'px';
     }
   }
 

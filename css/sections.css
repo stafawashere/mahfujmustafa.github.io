@@ -468,8 +468,8 @@
 }
 
 @keyframes flag-pulse {
-  0%, 100% { opacity: 0.6; box-shadow: 0 0 4px rgba(var(--purple-rgb), 0.6); }
-  50%      { opacity: 1;   box-shadow: 0 0 12px rgba(var(--purple-rgb), 1); }
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -529,7 +529,7 @@
   height: 5px;
   border-radius: 50%;
   background: var(--purple);
-  box-shadow: 0 0 7px rgba(var(--purple-rgb), 0.9);
+  box-shadow: 0 0 10px rgba(var(--purple-rgb), 1);
   animation: flag-pulse 4s ease-in-out infinite;
 }
 
@@ -866,7 +866,7 @@
    height: 7px;
    border-radius: 50%;
    background: rgba(74, 222, 128, 0.9);
-   box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+   box-shadow: 0 0 10px rgba(74, 222, 128, 0.75);
    animation: status-pulse 2.5s ease-in-out infinite;
    margin-right: 3px;
 }
@@ -881,8 +881,8 @@
 }
 
 @keyframes status-pulse {
-   0%, 100% { box-shadow: 0 0 4px rgba(74, 222, 128, 0.35); }
-   50% { box-shadow: 0 0 10px rgba(74, 222, 128, 0.75); }
+   0%, 100% { opacity: 0.72; }
+   50% { opacity: 1; }
 }
 
 @keyframes status-ping {

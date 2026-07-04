@@ -265,6 +265,19 @@
     setTimeout(tick, 5000);
   }
 
+  // F2: pause off-screen blurred glows so they don't composite a large blurred
+  // texture every frame while out of view.
+  function initFxGating() {
+    if (!('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => e.target.classList.toggle('fx-paused', !e.isIntersecting));
+    }, { rootMargin: '120px' });
+    ['hero', 'work', 'contact'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+  }
+
   function initAutoFocus() {
     if (!touchOnly.matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -277,6 +290,9 @@
     let current = null;
     let throttled = false;
     let trailing = false;
+    // F8: DOM is static after build — query the scorable nodes once instead of
+    // re-running querySelectorAll on every (throttled) scroll/resize pass.
+    let cards = null;
 
     function visibleRatio(rect) {
       if (!rect.height || rect.bottom <= 0 || rect.top >= window.innerHeight) return 0;
@@ -308,7 +324,8 @@
       let best = null;
       let bestScore = Infinity;
 
-      document.querySelectorAll(SELECTOR).forEach(el => {
+      if (!cards) cards = document.querySelectorAll(SELECTOR);
+      cards.forEach(el => {
         const rect = el.getBoundingClientRect();
         if (visibleRatio(rect) < MIN_VISIBLE) return;
 
@@ -1346,6 +1363,7 @@
   initHero();
   initLogo();
   initAutoFocus();
+  initFxGating();
 
   let tweaksBuilt = false;
   function ensureTweakPanel() {

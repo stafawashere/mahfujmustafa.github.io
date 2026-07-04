@@ -36,10 +36,9 @@ const TerminalBanners = {
       '-webkit-text-fill-color: transparent;',
       'width: fit-content;',
       'max-width: 100%;',
-      'animation: ' + (animate
-        ? 'bannerWipe .9s steps(28) both, bannerGlow 4.2s ease-in-out 1s infinite'
-        : 'bannerGlow 4.2s ease-in-out infinite') + ';',
     ].join('');
+    // F9: animation lives in CSS classes so `prefers-reduced-motion` media queries apply.
+    art.className = animate ? 'term-banner term-banner--wipe' : 'term-banner';
     art.textContent = this.asciiName.join('\n');
 
     const sub = document.createElement('div');
@@ -83,9 +82,10 @@ const TerminalBanners = {
       '-webkit-text-fill-color: transparent;',
       'width: fit-content;',
       'max-width: 100%;',
-      'animation: bannerWipe .8s steps(26) both, rootGlitch .26s steps(2) .8s 2;',
       'filter: drop-shadow(2px 0 0 rgba(86,128,255,0.5)) drop-shadow(-2px 0 0 rgba(240,114,107,0.6)) drop-shadow(0 1px 18px rgba(240,114,107,0.5));',
     ].join('');
+    // F9: wipe + glitch moved to a CSS class so reduced-motion can disable them.
+    art.className = 'term-banner--root';
     art.textContent = this.asciiRoot.join('\n');
 
     const sub = document.createElement('div');

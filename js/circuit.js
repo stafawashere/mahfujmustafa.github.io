@@ -1110,10 +1110,37 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
   }
 
   resize();
-  st.bootStart = performance.now();
+  // F9: under prefers-reduced-motion, skip the boot comet/ingress/burst timeline
+  // entirely and drop straight into the settled "bootDone" state.
+  if (REDUCED_MOTION) {
+    st.bootStart     = performance.now() - 1e7; // forces bootT >= 1 immediately (no comet)
+    st.boot          = 1;
+    st._bootArrived  = true;
+    st._bootIgnited  = true;
+    st._bootExited   = true;
+    st._coreFilling  = false;
+    st._exiting      = false;
+    st.bootIngress   = 1;
+    st.egress        = 0;
+    st.connEgress    = 0;
+    st.heroR         = 0;
+    st.railProg      = 0;
+    st.stageB        = -1;
+    st.coreHoldUntil = -1;
+    st.burstStart    = null;
+    st.energy        = 0;
+    st.bootDone      = true;
+    st.dotsStart     = performance.now();
+  } else {
+    st.bootStart = performance.now();
+  }
   schedule();
 
-  const onResize = () => { geomDirty = true; resize(); kick(); };
+  let resizeTimer = 0;
+  const onResize = () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { geomDirty = true; resize(); kick(); }, 100);
+  };
   const onMove   = (e) => { st.tmx = e.clientX; st.tmy = e.clientY; kick(); };
   const onLeave  = () => { st.tmx = -9999; st.tmy = -9999; kick(); };
   const onScroll = () => { geomDirty = true; kick(); };
@@ -1160,6 +1187,7 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
       document.removeEventListener('visibilitychange', onVis);
       if (COARSE_POINTER) window.removeEventListener('pointerdown', onTap);
       clearTimeout(tapClearTimer);
+      clearTimeout(resizeTimer);
       if (heroIO) { heroIO.disconnect(); heroIO = null; }
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     },
