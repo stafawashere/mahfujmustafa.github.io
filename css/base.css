@@ -28,13 +28,13 @@ body::before {
     linear-gradient(rgba(var(--purple-rgb), 0.032) 1px, transparent 1px),
     linear-gradient(90deg, rgba(var(--purple-rgb), 0.032) 1px, transparent 1px),
 
-    radial-gradient(66vw 50vh at 50% -12vh, rgba(var(--purple-rgb), 0.042), transparent 70%),
-    radial-gradient(60vw 48vh at 84% 82vh,  rgba(var(--lilac-rgb), 0.022), transparent 72%),
-    radial-gradient(62vw 50vh at 10% 178vh, rgba(var(--purple-rgb), 0.024),  transparent 72%),
-    radial-gradient(62vw 50vh at 90% 286vh, rgba(var(--purple-rgb), 0.024), transparent 72%),
-    radial-gradient(62vw 50vh at 14% 396vh, rgba(var(--lilac-rgb), 0.02), transparent 72%),
-    radial-gradient(62vw 50vh at 86% 506vh, rgba(var(--purple-rgb), 0.024),  transparent 72%),
-    radial-gradient(62vw 50vh at 20% 616vh, rgba(var(--lilac-rgb), 0.02),  transparent 72%),
+    radial-gradient(66vw 50vh at 50% -12vh, rgba(var(--purple-rgb), 0.022), transparent 80%),
+    radial-gradient(60vw 48vh at 84% 82vh,  rgba(var(--lilac-rgb), 0.022), transparent 82%),
+    radial-gradient(62vw 50vh at 10% 178vh, rgba(var(--purple-rgb), 0.024),  transparent 82%),
+    radial-gradient(62vw 50vh at 90% 286vh, rgba(var(--purple-rgb), 0.024), transparent 82%),
+    radial-gradient(62vw 50vh at 14% 396vh, rgba(var(--lilac-rgb), 0.02), transparent 82%),
+    radial-gradient(62vw 50vh at 86% 506vh, rgba(var(--purple-rgb), 0.024),  transparent 82%),
+    radial-gradient(62vw 50vh at 20% 616vh, rgba(var(--lilac-rgb), 0.02),  transparent 82%),
 
     linear-gradient(180deg,
       rgba(var(--purple-rgb), 0.028) 0%,
@@ -81,7 +81,7 @@ body::after {
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 128% 88% at 50% 30%, transparent 56%, rgba(3, 3, 6, 0.62) 100%),
+    radial-gradient(ellipse 128% 88% at 50% 30%, transparent 56%, rgba(3, 3, 6, 0.548) 100%),
     linear-gradient(180deg, rgba(8, 9, 12, 0) 70%, rgba(5, 5, 8, 0.5) 100%);
 }
 

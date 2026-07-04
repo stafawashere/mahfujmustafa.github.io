@@ -7,7 +7,7 @@ window.PORTFOLIO.experiences = [
     role:   'Security & Strategy Analyst',
     dates:  'MAR 2026 – APR 2026',
     points: [
-      "Analyzed threats and built a security strategy for LinkNYC's 1,700+ terminal public Wi-Fi network in a 6-week team challenge.",
+      "Analyzed threats and built a security strategy for LinkNYC's 1,700+ terminal public ㅤㅤ Wi-Fi network in a 6-week team challenge.",
       'Built a five-layer defense-in-depth framework, benchmarked against NIST, ISO 27001, IEC 62443, and OWASP IoT standards.',
       'Mapped the threat landscape into physical, cyber, and content-hijacking pillars with a P0–P3 risk matrix.',
       'Authored incident-response and crisis-communication playbooks and presented findings to an industry stakeholder.',

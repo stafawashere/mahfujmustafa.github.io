@@ -1,52 +1,33 @@
 window.PORTFOLIO = window.PORTFOLIO || {};
 
 Object.assign(window.PORTFOLIO, {
-  domains: [
+  specialties: [
     'Reverse Engineering',
-    'Full-Stack Development',
     'Security Analysis',
-    'Automation',
-    'Machine Learning',
-    'Live Operations',
-    'Game Development',
-    'IoT Security',
-    'Client-Server Architecture',
-    'Incident Response',
-    'Bot Development',
-    'Risk Assessment',
-    'Threat Modeling',
-    'Performance Optimization',
-    'API Wrapper Design',
-    'Realtime Systems',
-    'REST API Design',
-    'Data Modeling',
+    'Full-Stack Development',
+    'Live Game Ops',
   ],
 
-  tools: [
-    { label: 'discord.py',    icon: 'https://cdn.simpleicons.org/python/c3c5cd' },
-    { label: 'Roblox Studio', icon: 'https://cdn.simpleicons.org/roblox/c3c5cd' },
-    { label: 'Next.js',       icon: 'https://cdn.simpleicons.org/nextdotjs/c3c5cd' },
-    { label: 'Vite',          icon: 'https://cdn.simpleicons.org/vite/c3c5cd' },
-    { label: 'Express.js',    icon: 'https://cdn.simpleicons.org/express/c3c5cd' },
-    { label: 'PostgreSQL',    icon: 'https://cdn.simpleicons.org/postgresql/c3c5cd' },
-    { label: 'Node.js',       icon: 'https://cdn.simpleicons.org/nodedotjs/c3c5cd' },
-    { label: 'Prisma',        icon: 'https://cdn.simpleicons.org/prisma/c3c5cd' },
-    { label: 'PyTorch',       icon: 'https://cdn.simpleicons.org/pytorch/c3c5cd' },
-    { label: 'Tailwind CSS',  icon: 'https://cdn.simpleicons.org/tailwindcss/c3c5cd' },
-    { label: 'Discord API',   icon: 'https://cdn.simpleicons.org/discord/c3c5cd' },
-    { label: 'Arcade',        icon: null },
-    { label: 'React',         icon: 'https://cdn.simpleicons.org/react/c3c5cd' },
-    { label: 'TinyDB',        icon: null },
-    { label: 'Socket.IO',     icon: 'https://cdn.simpleicons.org/socketdotio/c3c5cd' },
-    { label: 'SQLite',        icon: 'https://cdn.simpleicons.org/sqlite/c3c5cd' },
-    { label: 'Git',           icon: 'https://cdn.simpleicons.org/git/c3c5cd' },
-  ],
-
-  languages: [
-    { label: 'Python',     icon: 'https://cdn.simpleicons.org/python/9d86ff' },
-    { label: 'Lua',        icon: 'https://cdn.simpleicons.org/lua/9d86ff' },
-    { label: 'JavaScript', icon: 'https://cdn.simpleicons.org/javascript/9d86ff' },
+  coreStack: [
     { label: 'TypeScript', icon: 'https://cdn.simpleicons.org/typescript/9d86ff' },
+    { label: 'Python',     icon: 'https://cdn.simpleicons.org/python/9d86ff' },
+    { label: 'Next.js',    icon: 'https://cdn.simpleicons.org/nextdotjs/9d86ff' },
+    { label: 'Node.js',    icon: 'https://cdn.simpleicons.org/nodedotjs/9d86ff' },
+    { label: 'PostgreSQL', icon: 'https://cdn.simpleicons.org/postgresql/9d86ff' },
+    { label: 'React',      icon: 'https://cdn.simpleicons.org/react/9d86ff' },
+    { label: 'discord.py', icon: 'https://cdn.simpleicons.org/python/9d86ff' },
+    { label: 'PyTorch',    icon: 'https://cdn.simpleicons.org/pytorch/9d86ff' },
+  ],
+
+  supporting: [
+    { label: 'Express.js',   icon: 'https://cdn.simpleicons.org/express/c3c5cd' },
+    { label: 'Prisma',       icon: 'https://cdn.simpleicons.org/prisma/c3c5cd' },
+    { label: 'Tailwind CSS', icon: 'https://cdn.simpleicons.org/tailwindcss/c3c5cd' },
+    { label: 'Socket.IO',    icon: 'https://cdn.simpleicons.org/socketdotio/c3c5cd' },
+    { label: 'SQLite',       icon: 'https://cdn.simpleicons.org/sqlite/c3c5cd' },
+    { label: 'Vite',         icon: 'https://cdn.simpleicons.org/vite/c3c5cd' },
+    { label: 'Git',          icon: 'https://cdn.simpleicons.org/git/c3c5cd' },
+    { label: 'Discord API',  icon: 'https://cdn.simpleicons.org/discord/c3c5cd' },
   ],
 
   techIcons: {

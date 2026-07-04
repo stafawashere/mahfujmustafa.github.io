@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="css/sections.css">
   <link rel="stylesheet" href="css/terminal.css">
   <link rel="stylesheet" href="css/palette.css">
+  <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
 
@@ -31,6 +32,10 @@
 
       <div id="nav-spacer"></div>
 
+      <button id="nav-menu-btn" aria-expanded="false" aria-controls="nav-links">
+        <span class="caret">&gt;</span>menu
+      </button>
+
       <div id="nav-links"></div>
     </nav>
 
@@ -42,7 +47,7 @@
         <span>contact<span>@</span>mahfujmustafa.dev</span>
         <span>New York City, NY</span>
         <span class="available">
-          <span class="dot"></span>available for work
+          available for work<span class="dot"></span>
         </span>
       </div>
 
@@ -52,10 +57,10 @@
         </div>
         <div class="hero-prompt-cmd">
           <span class="cmd-line"><span class="dollar">$</span>
-          <span id="hero-cmd-text"></span><span class="blink-cursor">
+          <span id="hero-cmd-text"></span><span class="blink-cursor"></span></span>
+          <span id="hero-prompt-tip">try the shell</span>
         </div>
       </div>
-      <span id="hero-prompt-tip">press me</span>
 
       <h1 id="hero-name" data-cnode="core"><span id="hero-l1">MAHFUJ</span><br><span id="hero-l2">MUSTAFA</span></h1>
 
@@ -66,19 +71,20 @@
 
       <p id="hero-bio">
         I'm a <strong>17-year-old high school student</strong> in NYC who breaks things
-        to understand them. Security research, reverse engineering, full-stack web,
-        Discord bots, API wrappers, automation — and live games that have reached
+        to understand them. Security research, reverse engineering, and full-stack
+        builds — plus live games that have reached
         <span class="count" id="hero-count">0M+ player visits</span>.
       </p>
 
       <div class="hero-actions">
-        <button class="btn-primary" id="hero-work-btn">view work <span>→</span></button>
+        <button class="btn-primary" id="hero-work-btn">view work <span class="btn-arrow">→</span></button>
         <button class="btn-secondary" id="hero-contact-btn">get in touch</button>
         <a href="https://github.com/stafawashere" target="_blank" rel="noopener"
-           aria-label="GitHub" title="GitHub" class="btn-icon" style="height:47px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+           aria-label="GitHub — @stafawashere" title="GitHub" class="btn-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
           </svg>
+          <span class="btn-icon-label">github</span>
         </a>
       </div>
 
@@ -133,14 +139,14 @@
           <div class="section-body-content">
             <div class="skills-grid" id="skills-content">
               <div>
-                <div class="skill-group-label">// domains</div>
-                <div class="tags" id="skills-domains"></div>
+                <div class="skill-group-label">// specialties</div>
+                <div class="tags" id="skills-specialties"></div>
+                <div class="skill-group-label sub">// supporting tools</div>
+                <div class="tags" id="skills-supporting"></div>
               </div>
               <div>
-                <div class="skill-group-label">// frameworks &amp; tools</div>
-                <div class="tags" id="skills-tools"></div>
-                <div class="skill-group-label sub">// languages</div>
-                <div class="tags" id="skills-langs"></div>
+                <div class="skill-group-label">// core stack</div>
+                <div class="tags" id="skills-core"></div>
               </div>
             </div>
           </div>
@@ -208,23 +214,29 @@
             <div class="contact-card">
               <div class="contact-card-glow"></div>
               <div class="contact-inner">
-                <div class="contact-cmd">$ ./contact --start</div>
+                <div class="contact-topline">
+                  <div class="contact-cmd">$ ./contact --start</div>
+                  <div class="contact-status"><span class="status-dot"></span>available &mdash; freelance &amp; full-time</div>
+                </div>
                 <h2 class="contact-heading">Let's build<br>something solid.</h2>
                 <p class="contact-sub">
-                  Open to freelance work and full-time roles. Whether it's breaking a system,
-                  shipping a product, or wiring up automation — let's talk.
+                  Freelance or full-time — if it involves breaking things, building things,
+                  or both, I want to hear about it.
                 </p>
                 <div class="contact-actions">
-                  <a href="mailto:contact@mahfujmustafa.dev" class="btn-primary">
-                    email me <span>→</span>
+                  <a href="mailto:contact@mahfujmustafa.dev" class="btn-primary btn-cta">
+                    start a conversation <span>→</span>
                   </a>
                   <a href="https://github.com/stafawashere" target="_blank" rel="noopener"
-                     aria-label="GitHub" title="GitHub" class="btn-secondary" style="padding:13px 16px;">
+                     class="btn-secondary btn-cta-secondary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:block;" aria-hidden="true">
                       <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
                     </svg>
+                    GitHub
                   </a>
+                  <a href="mailto:contact@mahfujmustafa.dev" class="contact-email">contact@mahfujmustafa.dev</a>
                 </div>
+                <p class="contact-trust">usually replies within 24h &middot; NYC (ET)</p>
               </div>
             </div>
 

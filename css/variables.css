@@ -1,7 +1,7 @@
 :root {
   --bg:          color-mix(in srgb, var(--purple) 1%, #020202);
   --bg-card:     color-mix(in srgb, var(--purple) 2%, #080808);
-  --bg-card-alt: color-mix(in srgb, var(--purple) 2%, #0a0a0a);
+  --bg-card-alt: color-mix(in srgb, var(--purple) 8%, #0b0b0b);
   --bg-nav:      color-mix(in srgb, var(--purple) 4%, rgba(9, 9, 11, 0.72));
   --bg-term:     color-mix(in srgb, var(--purple) 4%, #060606);
 

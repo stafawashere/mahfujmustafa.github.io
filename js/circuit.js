@@ -33,6 +33,11 @@ const CURIE_ANIM_SCHEMA = {
   parallaxEase:    { def: 0.08,  min: 0.02,  max: 0.3  },
   coreOffsetX:     { def: -100,  min: -280,  max: 160  },
   railOffsetX:     { def: 120,   min: -220,  max: 200  },
+  idlePulseMs:     { def: 4800,  min: 2000,  max: 9000 },
+  idlePulseAmp:    { def: 1,     min: 0,     max: 2    },
+  idleCarriers:    { def: true,  type: 'bool' },
+  idleEvents:      { def: true,  type: 'bool' },
+  idleEventGapS:   { def: 26,    min: 8,     max: 60   },
 };
 if (typeof window !== 'undefined') window.CURIE_ANIM_SCHEMA = CURIE_ANIM_SCHEMA;
 
@@ -41,7 +46,68 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
 
   const SECTIONS = ['#skills', '#experience', '#work', '#education', '#contact'];
 
-  const FPS_CAP      = 60;
+  const IDLE_CARRIERS = [
+    { branch: 0, periodMs: 3400, phase: 0,    inward: false },
+    { branch: 1, periodMs: 5100, phase: 0.42, inward: true  },
+    { branch: 2, periodMs: 4300, phase: 0.21, inward: false },
+    { branch: 3, periodMs: 6200, phase: 0.68, inward: false },
+    { branch: 4, periodMs: 7700, phase: 0.55, inward: true  },
+  ];
+
+  const EVENT_MS = 2200;
+
+  function hash01(n) {
+    const s = Math.sin(n * 12.9898) * 43758.5453;
+    return s - Math.floor(s);
+  }
+
+  function eventState(idleT) {
+    const slotMs = cfg('idleEventGapS') * 1000;
+    const slot   = Math.floor(idleT / slotMs);
+    if (hash01(slot * 1.7 + 3.3) < 0.18) return null;
+    const off   = (0.12 + hash01(slot * 2.9 + 1.1) * 0.5) * slotMs;
+    const local = idleT - slot * slotMs - off;
+    if (local < 0 || local > EVENT_MS) return null;
+    const branch = Math.floor(hash01(slot * 5.3 + 2.2) * IDLE_CARRIERS.length);
+    return { et: local / EVENT_MS, branch, slot };
+  }
+
+  function chatterPins(idleT) {
+    const slotMs = 700;
+    const slot   = Math.floor(idleT / slotMs);
+    if (hash01(slot * 3.1 + 0.5) <= 0.72) return null;
+    const local = idleT - slot * slotMs;
+    const a     = clamp(local / 120, 0, 1) * clamp((450 - local) / 200, 0, 1);
+    if (a <= 0.01) return null;
+    return { i: Math.floor(hash01(slot * 7.7 + 2.3) * 20), a: a * 0.32 };
+  }
+
+  function twinkleVia(idleT, viaCount) {
+    const slotMs = 1200;
+    const slot   = Math.floor(idleT / slotMs);
+    if (hash01(slot * 4.2 + 9.1) < 0.55) return null;
+    const local = idleT - slot * slotMs;
+    const a     = clamp(local / 200, 0, 1) * clamp((900 - local) / 300, 0, 1);
+    if (a <= 0.01) return null;
+    return { i: Math.floor(hash01(slot * 8.8 + 1.3) * viaCount), a };
+  }
+
+  function pinSeg(i, cx, cy, s) {
+    const k    = (i % 5) - 2;
+    const side = Math.floor(i / 5);
+    if (side === 0) return [[cx - s - 7, cy + k * 7.5], [cx - s, cy + k * 7.5]];
+    if (side === 1) return [[cx + s, cy + k * 7.5], [cx + s + 7, cy + k * 7.5]];
+    if (side === 2) return [[cx + k * 7.5, cy - s - 7], [cx + k * 7.5, cy - s]];
+    return [[cx + k * 7.5, cy + s], [cx + k * 7.5, cy + s + 7]];
+  }
+
+  const COARSE_POINTER = typeof window.matchMedia === 'function'
+    && window.matchMedia('(pointer: coarse)').matches;
+
+  const REDUCED_MOTION = typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const FPS_CAP      = COARSE_POINTER ? 30 : 60;
   const FRAME_MIN_MS = 1000 / FPS_CAP - 2;
 
   const AMBIENT_FPS    = 30;
@@ -91,7 +157,7 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
     coreX: 0, coreY: 0, coreHoldUntil: -1, _coreFilling: false, fillStart: -1,
     dotsStart: -1, bootDone: false,
     burstStart: null, _coreLit: false, _railLit: false,
-    nodeRail: {}, nodeCol: {},
+    nodeRail: {}, nodeCol: {}, _idleBusy: false,
   };
 
   const dataPackets = [];
@@ -523,24 +589,116 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
       ctx.restore();
     }
 
-    ctx.fillStyle = 'rgba(' + TINT_TAIL + ',0.97)'; ctx.beginPath(); ctx.arc(cx, cy, 3.6, 0, 7); ctx.fill();
-    bloomDot(cx, cy, 4, '232,224,255', 1);
+    const now    = performance.now();
+    const idleT  = st.dotsStart >= 0 ? now - st.dotsStart : -1;
+    const idleOn = st.bootDone && !st._exiting && hp < 0.004 && idleT >= 0 && !REDUCED_MOTION;
 
+    st._idleBusy = false;
     ctx.textBaseline = 'middle';
-    const now = performance.now();
-    if (st.dotsStart >= 0) {
-      [0, 2].forEach((bi, k) => {
-        const b       = branches[bi];
-        const elapsed = now - st.dotsStart;
-        const t       = (elapsed / (3000 + k * 700)) % 1;
-        const fadeIn  = clamp(elapsed / 600, 0, 1);
-        const env     = Math.max(0, Math.min(1, t / 0.12, (1 - t) / 0.12)) * fadeIn;
-        const pt      = polyAt(b, t);
+
+    let arrivalBump = 0;
+    if (idleOn && cfg('idleCarriers')) {
+      const fadeIn = clamp(idleT / 600, 0, 1);
+      for (const c of IDLE_CARRIERS) {
+        const t   = ((idleT / c.periodMs) + c.phase) % 1;
+        const env = Math.max(0, Math.min(1, t / 0.12, (1 - t) / 0.12)) * fadeIn;
+        if (c.inward) {
+          const d = 1 - t;
+          arrivalBump = Math.max(arrivalBump, Math.exp(-(d * d) / 0.006) * fadeIn);
+        }
+        if (env <= 0.01) continue;
+        const headT = c.inward ? 1 - t : t;
+        const pt    = polyAt(branches[c.branch], headT);
+        if (c.inward) {
+          const bpt  = polyAt(branches[c.branch], clamp(headT + 0.05, 0, 1));
+          const grad = ctx.createLinearGradient(pt[0], pt[1], bpt[0], bpt[1]);
+          grad.addColorStop(0, 'rgba(' + TINT_TAIL + ',' + (0.7 * env) + ')');
+          grad.addColorStop(1, 'rgba(' + LILAC + ',0)');
+          ctx.strokeStyle = grad; ctx.lineWidth = 2; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(pt[0], pt[1]); ctx.lineTo(bpt[0], bpt[1]); ctx.stroke();
+        }
         ctx.fillStyle = 'rgba(' + TINT_TAIL + ',' + (0.95 * env) + ')';
         ctx.beginPath(); ctx.arc(pt[0], pt[1], 1.9, 0, 7); ctx.fill();
         bloomDot(pt[0], pt[1], 1.9, '232,224,255', 0.95 * env);
-      });
+      }
     }
+
+    let eventSwell = 0;
+    const chatter  = [];
+    if (idleOn && cfg('idleEvents')) {
+      const ev = eventState(idleT);
+      if (ev) {
+        const b     = branches[ev.branch];
+        const endpt = b[b.length - 1];
+
+        const blink = clamp(ev.et / 0.1, 0, 1) * clamp((0.4 - ev.et) / 0.25, 0, 1);
+        if (blink > 0.01) bloomDot(endpt[0], endpt[1], 5, TINT_CORE, 0.85 * blink);
+
+        const pkt = (ev.et - 0.08) / 0.42;
+        if (pkt >= 0 && pkt <= 1) {
+          st._idleBusy = true;
+          const e   = 1 - Math.pow(1 - pkt, 2.4);
+          const env = clamp(pkt / 0.08, 0, 1) * clamp((1 - pkt) / 0.12, 0, 1);
+          const hpt = polyAt(b, 1 - e);
+          const tpt = polyAt(b, clamp((1 - e) + 0.06, 0, 1));
+          const grad = ctx.createLinearGradient(hpt[0], hpt[1], tpt[0], tpt[1]);
+          grad.addColorStop(0, 'rgba(' + TINT_CORE + ',' + (0.95 * env) + ')');
+          grad.addColorStop(1, 'rgba(' + LILAC + ',0)');
+          ctx.strokeStyle = grad; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(hpt[0], hpt[1]); ctx.lineTo(tpt[0], tpt[1]); ctx.stroke();
+          ctx.fillStyle = 'rgba(' + TINT_CORE + ',' + (0.98 * env) + ')';
+          ctx.beginPath(); ctx.arc(hpt[0], hpt[1], 2.6, 0, 7); ctx.fill();
+          bloomDot(hpt[0], hpt[1], 3, '245,240,255', 0.9 * env);
+        }
+
+        eventSwell = clamp((ev.et - 0.4) / 0.1, 0, 1) * clamp((0.85 - ev.et) / 0.35, 0, 1);
+
+        const burst = clamp((ev.et - 0.48) / 0.06, 0, 1) * clamp((0.78 - ev.et) / 0.18, 0, 1);
+        if (burst > 0.01) {
+          for (let j = 0; j < 3; j++) {
+            chatter.push({ i: Math.floor(hash01(ev.slot * 13.1 + j * 4.7) * 20), a: 0.5 * burst });
+          }
+        }
+      }
+    }
+
+    if (idleOn) {
+      const amb = chatterPins(idleT);
+      if (amb) chatter.push(amb);
+      const tw = twinkleVia(idleT, branches.length);
+      if (tw) {
+        const b     = branches[tw.i];
+        const endpt = b[b.length - 1];
+        bloomDot(endpt[0], endpt[1], 4, TINT_TAIL, 0.5 * tw.a);
+      }
+    }
+
+    if (chatter.length) {
+      ctx.lineCap = 'butt';
+      for (const c of chatter) {
+        const seg = pinSeg(c.i, cx, cy, s);
+        const a   = clamp(c.a, 0, 0.7);
+        ctx.strokeStyle = 'rgba(' + LILAC + ',' + a + ')'; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(seg[0][0], seg[0][1]); ctx.lineTo(seg[1][0], seg[1][1]); ctx.stroke();
+        bloomLine([seg[0], seg[1]], LILAC, a, 1.4);
+      }
+    }
+
+    let coreSwell = null;
+    if (st.bootDone) {
+      if (REDUCED_MOTION) {
+        coreSwell = 0.4;
+      } else {
+        const pMs   = cfg('idlePulseMs');
+        const beat  = (idleT >= 0 ? idleT : now) % pMs / pMs;
+        const pulse = Math.pow(0.5 - 0.5 * Math.cos(beat * Math.PI * 2), 1.6);
+        coreSwell   = clamp(pulse + 0.5 * arrivalBump + 0.7 * eventSwell, 0, 1.6) * cfg('idlePulseAmp');
+      }
+    }
+    const coreR = coreSwell == null ? 4 : 4 + 0.5 * clamp(coreSwell, 0, 1.6);
+    const coreA = coreSwell == null ? 1 : 0.85 + 0.13 * clamp(coreSwell, 0, 1.15);
+    ctx.fillStyle = 'rgba(' + TINT_TAIL + ',0.97)'; ctx.beginPath(); ctx.arc(cx, cy, coreR - 0.4, 0, 7); ctx.fill();
+    bloomDot(cx, cy, coreR, '232,224,255', coreA);
   }
 
   function drawBootComet(x, y) {
@@ -890,8 +1048,9 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
 
     const alive = activity || (g.hero && g.hero.visible);
 
-    // ambient = nothing is easing, only the idle dots are drifting; tick at half rate
-    st.ambient = alive && !activity;
+    // ambient = nothing is easing, only the idle dots are drifting; tick at half rate.
+    // a mid-flight synapse packet (st._idleBusy) needs the full frame rate to stay smooth.
+    st.ambient = alive && !activity && !st._idleBusy;
     if (alive) schedule();
   }
 
@@ -932,11 +1091,26 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
   const onScroll = () => { geomDirty = true; kick(); };
   const onVis    = () => kick();
 
+  let tapClearTimer = 0;
+  const onTap = (e) => {
+    st.tmx = e.clientX;
+    st.tmy = e.clientY;
+    kick();
+
+    clearTimeout(tapClearTimer);
+    tapClearTimer = setTimeout(() => {
+      st.tmx = -9999;
+      st.tmy = -9999;
+      kick();
+    }, 900);
+  };
+
   window.addEventListener('resize',     onResize);
   window.addEventListener('mousemove',  onMove, { passive: true });
   window.addEventListener('mouseout',   onLeave);
   window.addEventListener('scroll',     onScroll, { passive: true });
   document.addEventListener('visibilitychange', onVis);
+  if (COARSE_POINTER) window.addEventListener('pointerdown', onTap, { passive: true });
 
   const heroEl = document.querySelector('[data-cnode="core"]');
   if (heroEl && 'IntersectionObserver' in window) {
@@ -956,6 +1130,8 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
       window.removeEventListener('mouseout',   onLeave);
       window.removeEventListener('scroll',     onScroll);
       document.removeEventListener('visibilitychange', onVis);
+      if (COARSE_POINTER) window.removeEventListener('pointerdown', onTap);
+      clearTimeout(tapClearTimer);
       if (heroIO) { heroIO.disconnect(); heroIO = null; }
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     },

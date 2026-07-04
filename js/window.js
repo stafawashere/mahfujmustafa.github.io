@@ -14,8 +14,12 @@ class TermWindow {
     this._bindResize();
   }
 
+  _isSheet() {
+    return window.matchMedia('(max-width: 640px)').matches;
+  }
+
   _defaultState() {
-    const w = Math.min(740, window.innerWidth - 24);
+    const w = Math.min(740, window.innerWidth - 32);
     const x = Math.round((window.innerWidth - w) / 2);
     const y = 90;
     return { open: false, st: 'normal', w, x, y, h: 408 };
@@ -45,10 +49,23 @@ class TermWindow {
   _applyState() {
     const { open, st, w, x, y, h } = this.state;
     const max = st === 'max', min = st === 'min';
+    const sheet = this._isSheet();
 
     this.win.classList.toggle('is-open', open);
-    this.win.classList.toggle('is-max', max);
+    this.win.classList.toggle('is-max', max && !sheet);
     this.win.classList.toggle('is-min', min);
+    this.win.classList.toggle('is-sheet', sheet);
+
+    if (sheet) {
+      this.win.style.left   = '';
+      this.win.style.right  = '';
+      this.win.style.top    = '';
+      this.win.style.bottom = '';
+      this.win.style.width  = '';
+      if (this.body) this.body.style.height = '';
+      this._updateDims();
+      return;
+    }
 
     if (max) {
       this.win.style.left   = '12px';
@@ -88,6 +105,10 @@ class TermWindow {
     if (this.state.st === 'min') this.state.st = 'normal';
     this._applyState();
     this._save();
+
+    try { localStorage.setItem('mm_term_opened', '1'); } catch (e) {}
+    if (this.onOpen) this.onOpen();
+
     setTimeout(() => {
       const inp = this.win.querySelector('#term-input');
       if (inp) inp.focus();
@@ -122,7 +143,7 @@ class TermWindow {
   isOpen() { return this.state.open; }
 
   startDrag(e) {
-    if (this.state.st === 'max') return;
+    if (this.state.st === 'max' || this._isSheet()) return;
     e.preventDefault();
 
     const startX = e.clientX, startY = e.clientY;
@@ -157,6 +178,7 @@ class TermWindow {
   }
 
   startResize(e) {
+    if (this._isSheet()) return;
     e.preventDefault();
     const startY = e.clientY, startH = this.state.h;
     document.body.style.userSelect = 'none';
