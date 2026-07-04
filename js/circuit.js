@@ -1,17 +1,17 @@
 const CURIE_ANIM_SCHEMA = {
-  bootDurationMs:  { def: 1350,  min: 400,   max: 3000 },
+  bootDurationMs:  { def: 1000,  min: 400,   max: 3000 },
   bootArriveFrac:  { def: 0.62,  min: 0.2,   max: 0.95 },
   bootIngressMs:   { def: 360,   min: 80,    max: 1200 },
   bootFillMs:      { def: 980,   min: 120,   max: 1600 },
-  coreFullFrac:    { def: 0.9,   min: 0.5,   max: 1.0  },
+  coreFullFrac:    { def: 0.88,  min: 0.5,   max: 1.0  },
   bootHoldMs:      { def: 0,     min: 0,     max: 2500 },
   bootRailOutMs:   { def: 400,   min: 60,    max: 1000 },
   bootEgressMs:    { def: 360,   min: 80,    max: 1200 },
   bootConnOutMs:   { def: 360,   min: 80,    max: 1200 },
-  bootRetractEase: { def: 0.088, min: 0.02,  max: 0.25 },
+  bootRetractEase: { def: 0.1,   min: 0.02,  max: 0.25 },
   bootCometTail:   { def: 235,   min: 40,    max: 300  },
   bootCometWidth:  { def: 3,     min: 1,     max: 8    },
-  bootCometHead:   { def: 4.4,   min: 1,     max: 10   },
+  bootCometHead:   { def: 4,     min: 1,     max: 10   },
   bootBurstMs:     { def: 1240,  min: 200,   max: 1600 },
   bootBurstFadeIn: { def: 0.16,  min: 0.02,  max: 0.5  },
   bootBurstReach:  { def: 320,   min: 60,    max: 420  },
@@ -23,15 +23,15 @@ const CURIE_ANIM_SCHEMA = {
   hoverRadius:     { def: 60,    min: 40,    max: 240  },
   highlightReach:  { def: 232,   min: 80,    max: 400  },
   branchDone:      { def: 0.62,  min: 0.1,   max: 0.9  },
-  coreSize:        { def: 32,    min: 16,    max: 48   },
+  coreSize:        { def: 45,    min: 16,    max: 48   },
   retractEase:     { def: 0.088, min: 0.02,  max: 0.25 },
   nodeRailEase:    { def: 0.2,   min: 0.02,  max: 0.5  },
   nodeColEase:     { def: 0.09,  min: 0.02,  max: 0.4  },
   nodeRailLen:     { def: 35,    min: 10,    max: 80   },
-  mouseEase:       { def: 0.36,  min: 0.02,  max: 0.4  },
+  mouseEase:       { def: 0.38,  min: 0.02,  max: 0.4  },
   parallaxAmt:     { def: 0.008, min: 0,     max: 0.05 },
-  parallaxEase:    { def: 0.08,  min: 0.02,  max: 0.3  },
-  coreOffsetX:     { def: -100,  min: -280,  max: 160  },
+  parallaxEase:    { def: 0.02,  min: 0.02,  max: 0.3  },
+  coreOffsetX:     { def: -56,   min: -280,  max: 160  },
   railOffsetX:     { def: 120,   min: -220,  max: 200  },
   idlePulseMs:     { def: 4800,  min: 2000,  max: 9000 },
   idlePulseAmp:    { def: 1,     min: 0,     max: 2    },
@@ -210,13 +210,20 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
     bctx.globalCompositeOperation = 'lighter';
     bctx.lineJoin = 'round';
     bctx.lineCap  = 'round';
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    const grow = (x0, y0, x1, y1) => {
+      if (x0 < minX) minX = x0; if (y0 < minY) minY = y0;
+      if (x1 > maxX) maxX = x1; if (y1 > maxY) maxY = y1;
+    };
     for (const o of bloomOps) {
       if (o.k === 0) {
         bctx.fillStyle = 'rgba(' + o.rgb + ',' + o.a + ')';
         bctx.beginPath(); bctx.arc(o.x, o.y, o.r, 0, 7); bctx.fill();
+        grow(o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r);
       } else if (o.k === 1) {
         bctx.fillStyle = 'rgba(' + o.rgb + ',' + o.a + ')';
         bctx.fillRect(o.x, o.y, o.w, o.h);
+        grow(o.x, o.y, o.x + o.w, o.y + o.h);
       } else if (o.k === 2) {
         bctx.strokeStyle = 'rgba(' + o.rgb + ',' + o.a + ')';
         bctx.lineWidth = o.w;
@@ -224,24 +231,42 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
         bctx.moveTo(o.pts[0][0], o.pts[0][1]);
         for (let j = 1; j < o.pts.length; j++) bctx.lineTo(o.pts[j][0], o.pts[j][1]);
         bctx.stroke();
+        const hw = o.w / 2;
+        for (const p of o.pts) grow(p[0] - hw, p[1] - hw, p[0] + hw, p[1] + hw);
       } else {
         bctx.strokeStyle = 'rgba(' + o.rgb + ',' + o.a + ')';
         bctx.lineWidth = o.lw;
         bRRPath(o.x, o.y, o.w, o.h, o.r);
         bctx.stroke();
+        const hw = o.lw / 2;
+        grow(o.x - hw, o.y - hw, o.x + o.w + hw, o.y + o.h + hw);
       }
     }
     bloomOps.length = 0;
+
+    const margin = 24;
+    const dx0 = clamp(minX - margin, 0, vw);
+    const dy0 = clamp(minY - margin, 0, vh);
+    const dx1 = clamp(maxX + margin, 0, vw);
+    const dy1 = clamp(maxY + margin, 0, vh);
+    const dw = dx1 - dx0, dh = dy1 - dy0;
+    if (dw <= 0 || dh <= 0) return;
+
+    const srcSX = bw / vw, srcSY = bh / vh;
+    const devSX = canvas.width / vw, devSY = canvas.height / vh;
+    const sx = dx0 * srcSX, sy = dy0 * srcSY, sw = dw * srcSX, sh = dh * srcSY;
+    const tx = dx0 * devSX, ty = dy0 * devSY, tw = dw * devSX, th = dh * devSY;
+
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'lighter';
     ctx.imageSmoothingEnabled = true;
     ctx.globalAlpha = 0.85;
     ctx.filter = 'blur(' + (2.4 * DPR) + 'px)';
-    ctx.drawImage(bloomC, 0, 0, bw, bh, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bloomC, sx, sy, sw, sh, tx, ty, tw, th);
     ctx.globalAlpha = 0.55;
     ctx.filter = 'blur(' + (7 * DPR) + 'px)';
-    ctx.drawImage(bloomC, 0, 0, bw, bh, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bloomC, sx, sy, sw, sh, tx, ty, tw, th);
     ctx.filter = 'none';
     ctx.restore();
   }
@@ -485,7 +510,7 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
       const heroEase    = bootRetract ? cfg('bootRetractEase')
                         :               cfg('retractEase');
       st.heroR += (target - st.heroR) * heroEase * st._dt;
-      if (st.heroR < 0.3 && target === 0) st.heroR = 0;
+      if (st.heroR < 0.9 && target === 0) st.heroR = 0;
     }
 
     const branches = [
@@ -730,9 +755,9 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
     gDn.addColorStop(0, 'rgba(' + LILAC + ',' + (0.85 * a) + ')');
     gDn.addColorStop(1, 'rgba(' + LILAC + ',0)');
     ctx.strokeStyle = gDn; ctx.beginPath(); ctx.moveTo(x, coreY); ctx.lineTo(x, bot); ctx.stroke();
-    ctx.shadowColor = 'rgba(' + LILAC + ',' + (0.6 * a) + ')'; ctx.shadowBlur = 16;
     ctx.strokeStyle = 'rgba(' + LILAC + ',' + (0.5 * a) + ')'; ctx.lineWidth = 1.4;
     ctx.beginPath(); ctx.moveTo(x, top + 1); ctx.lineTo(x, bot - 1); ctx.stroke();
+    bloomLine([[x, top + 1], [x, bot - 1]], LILAC, 0.6 * a, 3);
     ctx.restore();
   }
 
@@ -791,7 +816,10 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
     rafId = 0;
     if (!isAlive() || document.hidden) return;
 
-    const frameMinMs = st.ambient ? AMBIENT_MIN_MS : FRAME_MIN_MS;
+    const burstDone = !st.burstStart || ts - st.burstStart >= cfg('bootBurstMs');
+    const retractTail = st._exiting && st.egress >= 1 && st.connEgress >= 1
+                     && burstDone && dataPackets.length === 0 && tapPulses.length === 0;
+    const frameMinMs = (st.ambient || retractTail) ? AMBIENT_MIN_MS : FRAME_MIN_MS;
     if (st.lastPaint && ts - st.lastPaint < frameMinMs) { schedule(); return; }
     st.lastPaint = ts;
     if ((frameTick++ % 20) === 0) geomDirty = true;

@@ -119,6 +119,7 @@ class TermWindow {
     this.state.open = false;
     this._applyState();
     this._save();
+    if (this.onClose) this.onClose();
   }
 
   toggle() {

@@ -67,6 +67,26 @@
       });
       container.appendChild(a);
     });
+
+    const shellLink = document.createElement('a');
+    shellLink.className   = 'nav-link nav-link-shell';
+    shellLink.textContent = 'shell';
+    shellLink.setAttribute('aria-pressed', 'false');
+    shellLink.addEventListener('click', () => {
+      closeMenu();
+      termWin.toggle();
+    });
+    container.appendChild(shellLink);
+
+    const syncShellState = () => {
+      const isOpen = termWin.isOpen();
+      shellLink.classList.toggle('is-active', isOpen);
+      shellLink.setAttribute('aria-pressed', isOpen ? 'true' : 'false');
+    };
+
+    termWin.onOpen  = syncShellState;
+    termWin.onClose = syncShellState;
+    syncShellState();
   }
 
   function buildSkills() {
@@ -544,38 +564,35 @@
   }
 
   function initHero() {
-    const h1El = document.getElementById('hero-name');
-    if (h1El) bootHeroName(h1El, coreLitMs());
+    initLiquidTitle();
+
+    const bootAt = performance.now();
+    let titleStarted = false;
+    const startTitle = () => {
+      if (titleStarted) return;
+      titleStarted = true;
+      const waited = performance.now() - bootAt;
+      bootLiquidTitle(Math.max(540, coreLitMs() - waited));
+    };
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('200px Pacifico').then(startTitle, startTitle);
+      setTimeout(startTitle, 300);
+    } else {
+      startTitle();
+    }
 
     const countEl = document.getElementById('hero-count');
     if (countEl) {
       animateHeroCount(countEl, PORTFOLIO.playerVisits, coreLitMs());
     }
 
-    const cmdEl   = document.getElementById('hero-cmd-text');
     const rotorEl = document.getElementById('hero-rotor');
-    if (cmdEl && rotorEl) {
-      setTimeout(() => typeHero(cmdEl, () => {
-        startRotor(rotorEl);
-        const tip = document.getElementById('hero-prompt-tip');
-        if (tip) tip.classList.add('is-armed');
-      }), 1180);
-    }
+    if (rotorEl) startRotor(rotorEl);
 
     const workBtn    = document.getElementById('hero-work-btn');
     const contactBtn = document.getElementById('hero-contact-btn');
     if (workBtn)    workBtn.addEventListener('click',    () => scrollToSection('work'));
     if (contactBtn) contactBtn.addEventListener('click', () => scrollToSection('contact'));
-
-    const promptEl = document.getElementById('hero-prompt');
-    const promptTipEl = document.getElementById('hero-prompt-tip');
-    if (promptEl) {
-      const dismissTip = () => { if (promptTipEl) promptTipEl.classList.add('is-dismissed'); };
-
-      promptEl.addEventListener('click', () => { termWin.open(); dismissTip(); });
-      promptEl.addEventListener('keydown', e => { if (e.key === 'Enter') { termWin.open(); dismissTip(); } });
-      promptEl.addEventListener('focus', dismissTip);
-    }
   }
 
   function buildChips(term) {
@@ -691,8 +708,8 @@
     const lilac = currentLilacHex();
     const slugs = new Set();
 
-    (PORTFOLIO.tools || []).forEach(t => {
-      const m = /simpleicons\.org\/([^/]+)\//.exec(t.icon || '');
+    (PORTFOLIO.coreStack || []).concat(PORTFOLIO.supporting || []).forEach(t => {
+      const m = /simpleicons\.org\/([^/]+)\//.exec(t.icon || "");
       if (m) slugs.add(m[1]);
     });
     Object.values(PORTFOLIO.techIcons || {}).forEach(slug => { if (slug) slugs.add(slug); });
@@ -706,6 +723,31 @@
   function queueIconTintPrefetch() {
     clearTimeout(tintWarmTimer);
     tintWarmTimer = setTimeout(prefetchIconTints, 400);
+  }
+
+  function syncLiquidTitleAccent(rgb) {
+    const svg = document.getElementById('hero-name-svg');
+    if (!svg) return;
+
+    const baseHue = hexToHsv('#7e88ff').h;
+    const hueShift = rgbToHsv(rgb.r, rgb.g, rgb.b).h - baseHue;
+
+    const retint = (hex) => {
+      const c = hexToRgb(hex);
+      if (!c) return hex;
+      const hsv = rgbToHsv(c.r, c.g, c.b);
+      return hsvToHex(hsv.h + hueShift, hsv.s, hsv.v);
+    };
+
+    svg.querySelectorAll('#liquid-skin stop').forEach(stop => {
+      if (!stop.dataset.baseColor) stop.dataset.baseColor = stop.getAttribute('stop-color');
+      stop.setAttribute('stop-color', retint(stop.dataset.baseColor));
+    });
+
+    svg.querySelectorAll('feDiffuseLighting, feSpecularLighting').forEach(el => {
+      if (!el.dataset.baseColor) el.dataset.baseColor = el.getAttribute('lighting-color');
+      el.setAttribute('lighting-color', retint(el.dataset.baseColor));
+    });
   }
 
   function applyAccent(hex) {
@@ -730,6 +772,8 @@
     });
 
     queueIconTintPrefetch();
+
+    syncLiquidTitleAccent(rgb);
 
     if (circuitSyncColors) circuitSyncColors();
   }
@@ -910,7 +954,7 @@
       { k: 'railOffsetX',     label: 'Rail X offset',        step: 4,     unit: 'px', help: 'Shifts the main vertical rail left / right.' },
 
       { group: 'APPEARANCE', desc: 'Brand accent colour' },
-      { k: 'accent',          label: 'Accent color',         color: true, def: '#7e88ff', apply: 'accent', help: 'Recolours the whole site and the canvas live.' },
+      { k: 'accent',          label: 'Accent color',         color: true, def: '#5b8cff', apply: 'accent', help: 'Recolours the whole site and the canvas live.' },
     ];
 
     (function checkPanelSync() {
@@ -1301,8 +1345,7 @@
 
     replayBoot = () => {
       circuit.replayBoot();
-      const h1El = document.getElementById('hero-name');
-      if (h1El) bootHeroName(h1El, coreLitMs());
+      bootLiquidTitle(coreLitMs());
     };
   }
 
@@ -1322,11 +1365,6 @@
     document.getElementById('term-titlebar'),
     document.getElementById('term-grip'),
   );
-
-  termWin.onOpen = () => {
-    const tip = document.getElementById('hero-prompt-tip');
-    if (tip) tip.classList.add('is-dismissed');
-  };
 
   const palette = new Palette(
     document.getElementById('palette-overlay'),

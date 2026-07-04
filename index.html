@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="icons/icon-chip.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -53,18 +53,83 @@
         </span>
       </div>
 
-      <div id="hero-prompt" role="button" tabindex="0" title="open the shell">
-        <div class="hero-prompt-host">
-          mahfuj@portfolio <span class="tilde">~</span> %
-        </div>
-        <div class="hero-prompt-cmd">
-          <span class="cmd-line"><span class="dollar">$</span>
-          <span id="hero-cmd-text"></span><span class="blink-cursor"></span></span>
-          <span id="hero-prompt-tip">try the shell</span>
-        </div>
-      </div>
+      <h1 id="hero-name" data-cnode="core" aria-label="Mahfuj Mustafa">
+        <svg id="hero-name-svg" viewBox="0 -40 1480 370" aria-hidden="true">
+          <defs>
+            <linearGradient id="liquid-skin" x1="0" y1="0" x2="0.1" y2="1">
+              <stop offset="0%"  stop-color="#ffffff"/>
+              <stop offset="15%" stop-color="#eef0fc"/>
+              <stop offset="33%" stop-color="#b0b5d4"/>
+              <stop offset="47%" stop-color="#666e9c"/>
+              <stop offset="55%" stop-color="#8e96be"/>
+              <stop offset="72%" stop-color="#eceefb"/>
+              <stop offset="88%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#b2b8d8"/>
+            </linearGradient>
 
-      <h1 id="hero-name" data-cnode="core"><span id="hero-l1">MAHFUJ</span><br><span id="hero-l2">MUSTAFA</span></h1>
+            <filter id="liquid-inflate" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+              <feGaussianBlur in="warp" stdDeviation="3.5" result="hmap"/>
+
+              <feDiffuseLighting in="hmap" surfaceScale="5" diffuseConstant="1.15" lighting-color="#c2c6dc" result="diff">
+                <feDistantLight azimuth="248" elevation="58"/>
+              </feDiffuseLighting>
+              <feComposite in="diff" in2="warp" operator="in" result="diffClip"/>
+              <feBlend in="warp" in2="diffClip" mode="multiply" result="body"/>
+
+              <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.1" specularExponent="80" lighting-color="#b9b3f2" result="spec2">
+                <fePointLight x="760" y="640" z="130"/>
+              </feSpecularLighting>
+              <feComposite in="spec2" in2="warp" operator="in" result="spec2Clip"/>
+
+              <feMerge>
+                <feMergeNode in="body"/>
+                <feMergeNode in="spec2Clip"/>
+              </feMerge>
+            </filter>
+
+            <filter id="liquid-glint" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+              <feGaussianBlur in="warp" stdDeviation="3.5" result="hmap"/>
+
+              <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.7" specularExponent="42" lighting-color="#ffffff" result="spec">
+                <fePointLight class="mv-light" x="360" y="150" z="170"/>
+              </feSpecularLighting>
+              <feComposite in="spec" in2="warp" operator="in"/>
+            </filter>
+
+            <filter id="liquid-shadow" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
+              <feDisplacementMap in="SourceAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+              <feComponentTransfer in="warp" result="fat">
+                <feFuncA type="table" tableValues="0 0.1289 0.2489 0.36 0.4622 0.5556 0.64 0.7156 0.7822 0.84 0.8889 0.9289 0.96 0.9822 0.9956 1"/>
+              </feComponentTransfer>
+              <feGaussianBlur in="fat" stdDeviation="12" result="soft"/>
+              <feOffset in="soft" dx="0" dy="10" result="cast"/>
+              <feFlood flood-color="#06060c" flood-opacity="0.55"/>
+              <feComposite in2="cast" operator="in"/>
+            </filter>
+          </defs>
+          <g class="t-ink" fill="url(#liquid-skin)" stroke="url(#liquid-skin)" stroke-width="2"
+             stroke-linejoin="round" stroke-linecap="round"
+             text-anchor="start" font-family="'Pacifico',cursive" paint-order="stroke fill">
+            <g filter="url(#liquid-shadow)">
+              <text class="t-line1" x="10" y="225" font-size="200">Mahfuj</text>
+              <text class="t-line2" x="770" y="225" font-size="200">Mustafa</text>
+            </g>
+            <g filter="url(#liquid-inflate)">
+              <text class="t-line1" x="10" y="225" font-size="200">Mahfuj</text>
+              <text class="t-line2" x="770" y="225" font-size="200">Mustafa</text>
+            </g>
+            <g filter="url(#liquid-glint)">
+              <text class="t-line1" x="10" y="225" font-size="200">Mahfuj</text>
+              <text class="t-line2" x="770" y="225" font-size="200">Mustafa</text>
+            </g>
+          </g>
+        </svg>
+      </h1>
 
       <div class="hero-role">
         <span class="label">role:</span>

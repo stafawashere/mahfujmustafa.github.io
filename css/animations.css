@@ -41,13 +41,6 @@
   50%       { filter: drop-shadow(0 1px 22px rgba(var(--lilac-rgb), 0.62)); }
 }
 
-@keyframes tipPulse {
-  0%, 100% { opacity: 0; transform: translate(6px, -50%); }
-  6%       { opacity: 1; transform: translate(0, -50%); }
-  32%      { opacity: 1; transform: translate(0, -50%); }
-  39%      { opacity: 0; transform: translate(0, -50%); }
-}
-
 .section-reveal {
    opacity: 0;
    transform: translateY(26px);

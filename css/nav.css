@@ -59,3 +59,7 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
+.nav-link-shell.is-active {
+  color: var(--lilac);
+}
+

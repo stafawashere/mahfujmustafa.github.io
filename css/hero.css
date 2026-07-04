@@ -2,7 +2,7 @@
   position: relative;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 168px 32px 96px;
+  padding: clamp(112px, 15vh, 168px) 32px 96px;
 }
 
 .hero-glow {
@@ -28,7 +28,7 @@
   color: var(--text-dim);
   border-bottom: 1px solid var(--border-nav);
   padding-bottom: 16px;
-  margin-bottom: 32px;
+  margin-bottom: clamp(20px, 3vh, 32px);
 }
 
 .hero-meta .available {
@@ -47,137 +47,16 @@
   box-shadow: 0 0 8px var(--purple);
 }
 
-#hero-prompt {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-  border-radius: 8px;
-  margin: -6px -10px 24px;
-  padding: 6px 10px;
-  transition: background .15s, box-shadow .15s;
-}
-
-.hero-prompt-cmd { position: relative; }
-
-#hero-prompt:hover { background: rgba(var(--purple-rgb), 0.08); }
-
-#hero-prompt:focus-visible {
-  outline: none;
-  background: rgba(var(--purple-rgb), 0.1);
-  box-shadow: 0 0 0 1px rgba(var(--lilac-rgb), 0.55);
-}
-
-#hero-prompt-tip {
-  --tip-bg: color-mix(in srgb, var(--purple) 28%, #0a0608);
-  --tip-border: color-mix(in srgb, var(--lilac) 52%, #0c0709);
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 18px);
-  transform: translateY(-50%);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--lilac);
-  background: var(--tip-bg);
-  border: 1px solid var(--tip-border);
-  border-radius: 7px;
-  padding: 5px 11px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.5),
-    0 0 12px rgba(var(--purple-rgb), 0.22),
-    inset 0 1px 0 rgba(var(--lilac-rgb), 0.1);
-  text-shadow: 0 0 6px rgba(var(--lilac-rgb), 0.25);
-  transition: opacity .16s ease-in, transform .16s ease-in;
-}
-
-#hero-prompt-tip.is-armed {
-  animation: tipPulse 7s ease-in-out infinite;
-}
-
-#hero-prompt-tip::before {
-  content: "";
-  position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-style: solid;
-  border-width: 7px 7px 7px 0;
-  border-color: transparent var(--tip-border) transparent transparent;
-}
-
-#hero-prompt-tip::after {
-  content: "";
-  position: absolute;
-  left: -6px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-style: solid;
-  border-width: 6px 6px 6px 0;
-  border-color: transparent var(--tip-bg) transparent transparent;
-}
-
-#hero-prompt-tip.is-dismissed {
-  animation: none;
-  opacity: 0;
-  transform: translate(6px, -50%);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #hero-prompt-tip.is-armed {
-    animation: none;
-    opacity: 1;
-    transform: translateY(-50%);
-  }
-}
-
-.hero-prompt-host {
-  font-size: 14px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-}
-
-.hero-prompt-host .tilde { color: var(--purple); }
-
-.hero-prompt-cmd {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  min-height: 22px;
-  color: var(--text-bright);
-}
-
-.hero-prompt-cmd .dollar { color: var(--purple); }
-
-.blink-cursor {
-  display: inline-block;
-  width: 9px;
-  height: 16px;
-  background: var(--lilac);
-  vertical-align: -2px;
-  margin-left: 2px;
-  animation: blink 1s steps(1) infinite;
-}
-
 #hero-name {
-  font-weight: 700;
-  font-size: clamp(48px, 9.5vw, 108px);
-  line-height: 0.92;
-  letter-spacing: -0.045em;
-  margin: 0 0 32px;
-  white-space: pre;
+  margin: 0 0 8px;
 }
 
-.name-glyph {
-  color: var(--lilac);
-  transition: color 0.45s ease;
-}
-
-.name-glyph.is-set {
-  color: inherit;
+#hero-name-svg {
+  display: block;
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  overflow: visible;
 }
 
 .hero-role {
@@ -214,7 +93,7 @@
   line-height: 1.6;
   max-width: 580px;
   color: var(--text-body);
-  margin: 0 0 40px;
+  margin: 0 0 clamp(28px, 4vh, 40px);
 }
 
 #hero-bio strong { color: var(--text-bright); font-weight: 600; }
@@ -335,7 +214,7 @@
 
 .scroll-hint {
   position: relative;
-  margin-top: 88px;
+  margin-top: clamp(36px, 6vh, 88px);
   display: flex;
   align-items: center;
   gap: 12px;

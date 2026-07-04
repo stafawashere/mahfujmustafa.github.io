@@ -5,10 +5,10 @@
   --bg-nav:      color-mix(in srgb, var(--purple) 4%, rgba(9, 9, 11, 0.72));
   --bg-term:     color-mix(in srgb, var(--purple) 4%, #060606);
 
-  --purple:      #7e88ff;
-  --purple-rgb:  126, 136, 255;
-  --lilac:       #aab0ff;
-  --lilac-rgb:   170, 176, 255;
+  --purple:      #5b8cff;
+  --purple-rgb:  91, 140, 255;
+  --lilac:       #93b3ff;
+  --lilac-rgb:   147, 179, 255;
 
   --text-bright: #e7e8ec;
   --text-body:   #aeb0bc;

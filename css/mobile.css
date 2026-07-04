@@ -60,9 +60,7 @@
 
    .hero-meta { gap: 8px 16px; }
 
-   #hero-name { font-size: clamp(66px, 18vw, 108px); }
-
-   #hero-prompt { display: none; }
+   #hero-name-svg { max-width: none; }
 
    .hero-role .value { font-size: 16px; min-width: 0; }
 
@@ -307,8 +305,6 @@
       border-color: var(--purple);
       background: rgba(var(--purple-rgb), 0.14);
    }
-
-   #hero-prompt:active { background: rgba(var(--purple-rgb), 0.08); }
 
    .nav-link:active {
       color: var(--text-bright);
