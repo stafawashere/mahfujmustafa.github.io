@@ -112,7 +112,7 @@
   gap: 8px;
 }
 
-.tag:hover {
+.tag:is(:hover, .is-autofocus) {
   border-color: var(--purple);
   color: var(--lilac);
   background: rgba(var(--purple-rgb), 0.08);
@@ -125,7 +125,7 @@
   background: rgba(var(--purple-rgb), 0.08);
 }
 
-.tag.lang:hover { border-color: var(--purple); }
+.tag.lang:is(:hover, .is-autofocus) { border-color: var(--purple); }
 
 .tag.is-highlight {
   color: var(--lilac);
@@ -133,7 +133,7 @@
   background: rgba(var(--purple-rgb), 0.10);
 }
 
-.tag.is-highlight:hover { border-color: var(--purple); }
+.tag.is-highlight:is(:hover, .is-autofocus) { border-color: var(--purple); }
 
 .tag img {
   display: block;
@@ -192,7 +192,7 @@
   transition: opacity .3s ease;
 }
 
-.exp-card:hover {
+.exp-card:is(:hover, .is-autofocus) {
   border-color: color-mix(in srgb, var(--purple) 34%, var(--bg-card));
   background-color: var(--bg-card-alt);
   transform: translateY(-3px);
@@ -200,13 +200,13 @@
               0 10px 26px -18px rgba(var(--purple-rgb), 0.32);
 }
 
-.exp-card:hover::before {
+.exp-card:is(:hover, .is-autofocus)::before {
   opacity: 1;
   width: 3px;
   transform: scaleY(1);
 }
 
-.exp-card:hover::after { opacity: 1; }
+.exp-card:is(:hover, .is-autofocus)::after { opacity: 1; }
 
 .exp-org {
   font-size: 16px;
@@ -238,7 +238,7 @@
   transition: color .2s ease;
 }
 
-.exp-card:hover .exp-role { color: var(--text-body); }
+.exp-card:is(:hover, .is-autofocus) .exp-role { color: var(--text-body); }
 
 .exp-dates {
   display: inline-flex;
@@ -264,12 +264,12 @@
   transition: opacity .22s ease, box-shadow .22s ease;
 }
 
-.exp-card:hover .exp-dates {
+.exp-card:is(:hover, .is-autofocus) .exp-dates {
   border-color: color-mix(in srgb, var(--purple) 30%, var(--border));
   color: var(--text-muted);
 }
 
-.exp-card:hover .exp-dates::before {
+.exp-card:is(:hover, .is-autofocus) .exp-dates::before {
   opacity: 1;
   box-shadow: 0 0 7px rgba(var(--purple-rgb), 0.8);
 }
@@ -302,7 +302,7 @@
   transition: opacity .22s ease, transform .22s ease;
 }
 
-.exp-card:hover .exp-points li::before {
+.exp-card:is(:hover, .is-autofocus) .exp-points li::before {
   opacity: 1;
   transform: translateX(2px);
 }
@@ -330,7 +330,7 @@
   overflow: hidden;
 }
 
-.project-card:hover,
+.project-card:is(:hover, .is-autofocus),
 .project-card:focus-visible {
   border-color: var(--purple);
   transform: translateY(-4px);
@@ -347,7 +347,7 @@
   box-shadow: 0 0 0 1px rgba(var(--purple-rgb), 0.07), 0 20px 44px -34px rgba(var(--purple-rgb), 0.5);
 }
 
-.project-card.is-featured:hover,
+.project-card.is-featured:is(:hover, .is-autofocus),
 .project-card.is-featured:focus-visible {
   border-color: var(--purple);
 }
@@ -473,9 +473,9 @@
   .project-card.is-featured .project-flag::before { animation: none; }
   .card-fx { opacity: 0.6; }
   .project-card.is-gleam .card-fx::after { display: none; }
-  .project-card:hover,
+  .project-card:is(:hover, .is-autofocus),
   .project-card:focus-visible { transform: none; }
-  .project-card:hover .tech-badge,
+  .project-card:is(:hover, .is-autofocus) .tech-badge,
   .project-card:focus-visible .tech-badge { transition-delay: 0s; }
 
   .contact-card-glow,
@@ -495,12 +495,12 @@
     transition: none;
   }
 
-  .exp-card:hover,
-  .edu-card:hover { transform: none; }
-  .exp-card:hover::before,
-  .edu-card:hover::before { transform: scaleY(1); }
-  .exp-card:hover .exp-points li::before,
-  .edu-card:hover .edu-name::after { transform: none; }
+  .exp-card:is(:hover, .is-autofocus),
+  .edu-card:is(:hover, .is-autofocus) { transform: none; }
+  .exp-card:is(:hover, .is-autofocus)::before,
+  .edu-card:is(:hover, .is-autofocus)::before { transform: scaleY(1); }
+  .exp-card:is(:hover, .is-autofocus) .exp-points li::before,
+  .edu-card:is(:hover, .is-autofocus) .edu-name::after { transform: none; }
 }
 
 .project-flag {
@@ -524,7 +524,7 @@
   animation: flag-pulse 4s ease-in-out infinite;
 }
 
-.project-card:hover .project-name .arrow,
+.project-card:is(:hover, .is-autofocus) .project-name .arrow,
 .project-card:focus-visible .project-name .arrow {
   transform: translate(1px, -1px);
 }
@@ -587,20 +587,20 @@
 
 .tech-badge img { display: block; width: 15px; height: 15px; }
 
-.project-card:hover .tech-badge,
+.project-card:is(:hover, .is-autofocus) .tech-badge,
 .project-card:focus-visible .tech-badge {
   color: var(--lilac);
   border-color: color-mix(in srgb, var(--purple) 28%, var(--bg-card));
   background: rgba(var(--purple-rgb), 0.08);
 }
 
-.project-card:hover .tech-badge:nth-child(2),
+.project-card:is(:hover, .is-autofocus) .tech-badge:nth-child(2),
 .project-card:focus-visible .tech-badge:nth-child(2) { transition-delay: 45ms; }
-.project-card:hover .tech-badge:nth-child(3),
+.project-card:is(:hover, .is-autofocus) .tech-badge:nth-child(3),
 .project-card:focus-visible .tech-badge:nth-child(3) { transition-delay: 90ms; }
-.project-card:hover .tech-badge:nth-child(4),
+.project-card:is(:hover, .is-autofocus) .tech-badge:nth-child(4),
 .project-card:focus-visible .tech-badge:nth-child(4) { transition-delay: 135ms; }
-.project-card:hover .tech-badge:nth-child(5),
+.project-card:is(:hover, .is-autofocus) .tech-badge:nth-child(5),
 .project-card:focus-visible .tech-badge:nth-child(5) { transition-delay: 180ms; }
 
 .project-link {
@@ -609,7 +609,7 @@
   font-weight: 600;
 }
 
-.project-card:hover .project-link .arrow { transform: translate(1px, -1px); }
+.project-card:is(:hover, .is-autofocus) .project-link .arrow { transform: translate(1px, -1px); }
 
 .education-grid {
   display: grid;
@@ -662,7 +662,7 @@
   transition: opacity .3s ease;
 }
 
-.edu-card:hover {
+.edu-card:is(:hover, .is-autofocus) {
   border-color: color-mix(in srgb, var(--purple) 34%, var(--bg-card));
   background-color: var(--bg-card-alt);
   transform: translateY(-3px);
@@ -670,13 +670,13 @@
               0 10px 26px -18px rgba(var(--purple-rgb), 0.32);
 }
 
-.edu-card:hover::before {
+.edu-card:is(:hover, .is-autofocus)::before {
   opacity: 1;
   width: 3px;
   transform: scaleY(1);
 }
 
-.edu-card:hover::after { opacity: 1; }
+.edu-card:is(:hover, .is-autofocus)::after { opacity: 1; }
 
 .edu-dates {
   position: absolute;
@@ -688,7 +688,7 @@
   transition: color .22s ease;
 }
 
-.edu-card:hover .edu-dates { color: var(--text-dim); }
+.edu-card:is(:hover, .is-autofocus) .edu-dates { color: var(--text-dim); }
 
 .edu-name {
   display: block;
@@ -713,9 +713,9 @@
 }
 
 .edu-name:hover,
-.edu-card:hover .edu-name { color: var(--lilac); }
+.edu-card:is(:hover, .is-autofocus) .edu-name { color: var(--lilac); }
 
-.edu-card:hover .edu-name::after {
+.edu-card:is(:hover, .is-autofocus) .edu-name::after {
   opacity: 1;
   transform: translate(0, 0);
 }

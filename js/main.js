@@ -256,8 +256,7 @@
 
   function initCardGleam() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const fineHover     = window.matchMedia('(hover: hover) and (pointer: fine)');
-    if (reduceMotion.matches || !fineHover.matches) return;
+    if (reduceMotion.matches) return;
 
     const cards = Array.from(document.querySelectorAll('.project-card.is-featured'));
     if (!cards.length) return;
@@ -293,6 +292,94 @@
     }
 
     setTimeout(tick, 5000);
+  }
+
+  function initAutoFocus() {
+    if (!touchOnly.matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const SELECTOR = '.project-card, .exp-card, .edu-card, .tag';
+    const FOCAL_FRAC = 0.42;
+    const MIN_VISIBLE = 0.65;
+    const STICKINESS = 0.72;
+
+    let current = null;
+    let throttled = false;
+    let trailing = false;
+
+    function visibleRatio(rect) {
+      if (!rect.height || rect.bottom <= 0 || rect.top >= window.innerHeight) return 0;
+      return (Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)) / rect.height;
+    }
+
+    function focalDistance(rect, focalY) {
+      return Math.abs((rect.top + rect.bottom) / 2 - focalY);
+    }
+
+    function setFocus(el) {
+      if (el === current) return;
+
+      if (current) {
+        current.classList.remove('is-autofocus');
+        current.dispatchEvent(new Event('mouseleave'));
+      }
+
+      current = el;
+
+      if (current) {
+        current.classList.add('is-autofocus');
+        current.dispatchEvent(new Event('mouseenter'));
+      }
+    }
+
+    function update() {
+      const focalY = window.innerHeight * FOCAL_FRAC;
+      let best = null;
+      let bestScore = Infinity;
+
+      document.querySelectorAll(SELECTOR).forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (visibleRatio(rect) < MIN_VISIBLE) return;
+
+        const score = focalDistance(rect, focalY);
+        if (score < bestScore) {
+          bestScore = score;
+          best = el;
+        }
+      });
+
+      if (current && best && best !== current) {
+        const rect = current.getBoundingClientRect();
+        const currentStillValid = visibleRatio(rect) >= MIN_VISIBLE;
+        const newcomerClearlyCloser = bestScore < focalDistance(rect, focalY) * STICKINESS;
+        if (currentStillValid && !newcomerClearlyCloser) best = current;
+      }
+
+      setFocus(best);
+    }
+
+    function onScroll() {
+      if (throttled) {
+        trailing = true;
+        return;
+      }
+
+      throttled = true;
+      update();
+
+      setTimeout(() => {
+        throttled = false;
+        if (trailing) {
+          trailing = false;
+          onScroll();
+        }
+      }, 90);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    setTimeout(update, 700);
   }
 
   function buildEducation() {
@@ -711,7 +798,7 @@
     bottom.appendChild(sw); bottom.appendChild(hex);
 
     const presets = document.createElement('div'); presets.className = 'cp-presets';
-    ['#6847de','#7c5cff','#5b8cff','#3fb6c9','#3ecf8e','#e0b341','#f0726b','#e0568f','#b15cf0','#9aa0ad']
+    ['#7e88ff','#7c5cff','#5b8cff','#3fb6c9','#3ecf8e','#e0b341','#f0726b','#e0568f','#b15cf0','#9aa0ad']
       .forEach(c => {
         const p = document.createElement('button');
         p.type = 'button'; p.className = 'cp-preset'; p.style.background = c; p.title = c;
@@ -823,7 +910,7 @@
       { k: 'railOffsetX',     label: 'Rail X offset',        step: 4,     unit: 'px', help: 'Shifts the main vertical rail left / right.' },
 
       { group: 'APPEARANCE', desc: 'Brand accent colour' },
-      { k: 'accent',          label: 'Accent color',         color: true, def: '#6847de', apply: 'accent', help: 'Recolours the whole site and the canvas live.' },
+      { k: 'accent',          label: 'Accent color',         color: true, def: '#7e88ff', apply: 'accent', help: 'Recolours the whole site and the canvas live.' },
     ];
 
     (function checkPanelSync() {
@@ -1079,7 +1166,7 @@
 
       Object.keys(cfg).forEach(k => delete cfg[k]);
       try { localStorage.removeItem('curieAnimCfg'); } catch (e) {}
-      applyAccent('#6847de');
+      applyAccent('#7e88ff');
 
       const oldGear = document.getElementById('curie-gear');
       const oldDrawer = document.getElementById('curie-drawer');
@@ -1307,6 +1394,7 @@
   initBackgroundSizing();
   initHero();
   initLogo();
+  initAutoFocus();
 
   let tweaksBuilt = false;
   function ensureTweakPanel() {

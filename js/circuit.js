@@ -113,10 +113,10 @@ function initCircuit(canvas, getAnimCfg, isAlive) {
   const AMBIENT_FPS    = 30;
   const AMBIENT_MIN_MS = 1000 / AMBIENT_FPS - 2;
 
-  let PURPLE = '104, 71, 222';
-  let LILAC  = '157, 134, 255';
-  let PRGB   = [104, 71, 222];
-  let LRGB   = [157, 134, 255];
+  let PURPLE = '126, 136, 255';
+  let LILAC  = '170, 176, 255';
+  let PRGB   = [126, 136, 255];
+  let LRGB   = [170, 176, 255];
 
   let TINT_SOFT = '216, 206, 255';
   let TINT_TAIL = '234, 226, 255';

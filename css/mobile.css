@@ -60,8 +60,6 @@
 
    .hero-meta { gap: 8px 16px; }
 
-   .hero-meta .meta-right { margin-left: auto; }
-
    #hero-name { font-size: clamp(66px, 18vw, 108px); }
 
    #hero-prompt { display: none; }
@@ -196,8 +194,6 @@
    .project-card.is-featured .project-flag::before { animation: none; }
 
    .contact-card-glow { animation: none; opacity: 0.8; }
-
-   .contact-card::after { display: none; }
 
    .btn-cta span { animation: none; }
 
