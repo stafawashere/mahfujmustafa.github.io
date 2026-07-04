@@ -167,7 +167,8 @@ function bootLiquidTitle(revealMs) {
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const lowPower = (navigator.hardwareConcurrency || 8) <= 4;
-  if (prefersReducedMotion || lowPower) {
+  const isSafari = /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
+  if (prefersReducedMotion || lowPower || isSafari) {
     settle();
     return;
   }
