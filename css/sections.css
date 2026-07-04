@@ -930,6 +930,12 @@
    gap: 14px;
 }
 
+.contact-buttons {
+   display: flex;
+   align-items: center;
+   gap: 14px;
+}
+
 .btn-cta {
    font-size: 15px;
    padding: 16px 30px;

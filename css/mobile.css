@@ -139,19 +139,32 @@
 
    .contact-actions { display: contents; }
 
-   .contact-actions .btn-cta,
-   .contact-actions .btn-cta-secondary {
-      order: 0;
-      flex: none;
+   .contact-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+   }
+
+   .contact-buttons .btn-cta {
+      flex: 1;
+      min-width: 0;
+      justify-content: center;
+      text-align: center;
+      padding: 14px;
+      font-size: 14px;
+   }
+
+   .contact-buttons .btn-cta-secondary {
+      flex: 0 0 52px;
+      width: 52px;
+      height: auto;
       align-self: stretch;
+      margin-top: 0;
+      padding: 0;
       justify-content: center;
    }
 
-   .contact-actions .btn-cta-secondary {
-      height: auto;
-      margin-top: 12px;
-      padding: 14px 18.7px;
-   }
+   .contact-buttons .btn-cta-secondary .btn-cta-label { display: none; }
 
    .contact-trust { text-align: center; }
 
