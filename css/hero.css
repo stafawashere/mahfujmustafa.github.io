@@ -61,9 +61,11 @@
 
 .hero-role {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 10px;
   font-size: 19px;
+  line-height: 1.4;
+  min-height: calc(19px * 1.4);
   margin-bottom: 16px;
 }
 
