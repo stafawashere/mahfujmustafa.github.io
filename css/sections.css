@@ -135,11 +135,20 @@
 
 .tag.is-highlight:is(:hover, .is-autofocus) { border-color: var(--purple); }
 
-.tag img {
-  display: block;
+/* Brand icons are rendered as CSS masks tinted with currentColor, so they
+   always match the tag's text color / theme accent regardless of what the
+   simpleicons CDN returns. */
+.tech-ico {
+  display: inline-block;
+  flex: none;
   width: 14px;
   height: 14px;
+  background-color: currentColor;
+  -webkit-mask: var(--ico) center / contain no-repeat;
+  mask: var(--ico) center / contain no-repeat;
 }
+
+.tag .tech-ico { width: 14px; height: 14px; }
 
 .experience-list { display: flex; flex-direction: column; gap: 14px; }
 
@@ -585,7 +594,7 @@
   transition: border-color .18s, color .18s, background .18s;
 }
 
-.tech-badge img { display: block; width: 15px; height: 15px; }
+.tech-badge .tech-ico { width: 15px; height: 15px; }
 
 .project-card:is(:hover, .is-autofocus) .tech-badge,
 .project-card:focus-visible .tech-badge {

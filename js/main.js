@@ -2,27 +2,21 @@
 
   const touchOnly = window.matchMedia('(hover: none)');
 
-  function bindTouchTint(el, applyTint, clearTint) {
-    if (!touchOnly.matches) return;
-
-    let revertTimer = null;
-    el.addEventListener('pointerdown', () => {
-      applyTint();
-      clearTimeout(revertTimer);
-      revertTimer = setTimeout(clearTint, 900);
-    }, { passive: true });
-  }
-
   function iconImg(url, size) {
     if (!url) return null;
-    const img = document.createElement('img');
-    img.loading  = 'lazy';
-    img.decoding = 'async';
-    img.src      = url;
-    img.alt      = '';
-    img.width    = size;
-    img.height   = size;
-    return img;
+    // Render the icon as a CSS mask tinted with currentColor instead of a raw
+    // <img>. This keeps every icon locked to the active theme accent and makes
+    // it immune to the simpleicons CDN occasionally serving brand-colored
+    // fallbacks (which showed up as mismatched icon colors).
+    const span = document.createElement('span');
+    span.className = 'tech-ico';
+    span.setAttribute('aria-hidden', 'true');
+    span.style.setProperty('--ico', 'url("' + url + '")');
+    if (size) {
+      span.style.width  = size + 'px';
+      span.style.height = size + 'px';
+    }
+    return span;
   }
 
   function buildNav() {
@@ -106,11 +100,7 @@
       const span = document.createElement('span');
       span.className = 'tag lang';
       const img = iconImg(c.icon, 14);
-      if (img) {
-        const slug = /simpleicons\.org\/([^/]+)\//.exec(c.icon || '');
-        if (slug) img.dataset.iconSlug = slug[1];
-        span.appendChild(img);
-      }
+      if (img) span.appendChild(img);
       span.append(c.label);
       coreEl.appendChild(span);
     });
@@ -119,23 +109,7 @@
       const span = document.createElement('span');
       span.className = 'tag';
       const img = iconImg(t.icon, 14);
-      if (img) {
-        const slug = /simpleicons\.org\/([^/]+)\//.exec(t.icon || '');
-        if (slug) {
-          const baseSrc = img.src;
-          span.addEventListener('mouseenter', () => {
-            img.src = 'https://cdn.simpleicons.org/' + slug[1] + '/' + currentLilacHex();
-          });
-          span.addEventListener('mouseleave', () => { img.src = baseSrc; });
-
-          bindTouchTint(
-            span,
-            () => { img.src = 'https://cdn.simpleicons.org/' + slug[1] + '/' + currentLilacHex(); },
-            () => { img.src = baseSrc; }
-          );
-        }
-        span.appendChild(img);
-      }
+      if (img) span.appendChild(img);
       span.append(t.label);
       supportingEl.appendChild(span);
     });
@@ -223,40 +197,17 @@
 
       const tech = document.createElement('div');
       tech.className = 'project-tech';
-      const techIcons = [];
       p.tech.forEach(label => {
         const badge = document.createElement('span');
         badge.className = 'tech-badge';
         const slug = PORTFOLIO.techIcons[label];
         if (slug) {
-          const img = iconImg('https://cdn.simpleicons.org/' + slug + '/c3c5cd', 15);
-          if (img) {
-            badge.appendChild(img);
-            techIcons.push({ img: img, slug: slug });
-          }
+          const img = iconImg('https://cdn.simpleicons.org/' + slug, 15);
+          if (img) badge.appendChild(img);
         }
         badge.append(label);
         tech.appendChild(badge);
       });
-
-      card.addEventListener('mouseenter', () => {
-        const lilac = currentLilacHex();
-        techIcons.forEach(t => { t.img.src = 'https://cdn.simpleicons.org/' + t.slug + '/' + lilac; });
-      });
-      card.addEventListener('mouseleave', () => {
-        techIcons.forEach(t => { t.img.src = 'https://cdn.simpleicons.org/' + t.slug + '/c3c5cd'; });
-      });
-
-      bindTouchTint(
-        card,
-        () => {
-          const lilac = currentLilacHex();
-          techIcons.forEach(t => { t.img.src = 'https://cdn.simpleicons.org/' + t.slug + '/' + lilac; });
-        },
-        () => {
-          techIcons.forEach(t => { t.img.src = 'https://cdn.simpleicons.org/' + t.slug + '/c3c5cd'; });
-        }
-      );
 
       if (p.featured) {
         const flag = document.createElement('span');
@@ -670,13 +621,6 @@
     return '#' + c(r) + c(g) + c(b);
   }
 
-  function currentLilacHex() {
-    const raw = getComputedStyle(document.documentElement).getPropertyValue('--purple-rgb');
-    const parts = raw.split(',').map(n => parseInt(n, 10));
-    if (parts.length !== 3 || parts.some(isNaN)) return '9d86ff';
-    const lilac = lighten({ r: parts[0], g: parts[1], b: parts[2] }, 0.34);
-    return rgbToHex(lilac.r, lilac.g, lilac.b).slice(1);
-  }
   function rgbToHsv(r, g, b) {
     r /= 255; g /= 255; b /= 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
@@ -703,27 +647,6 @@
   }
   function hsvToHex(h, s, v) { const c = hsvToRgb(h, s, v); return rgbToHex(c.r, c.g, c.b); }
   function hexToHsv(hex) { const c = hexToRgb(hex) || { r: 104, g: 71, b: 222 }; return rgbToHsv(c.r, c.g, c.b); }
-
-  function prefetchIconTints() {
-    const lilac = currentLilacHex();
-    const slugs = new Set();
-
-    (PORTFOLIO.coreStack || []).concat(PORTFOLIO.supporting || []).forEach(t => {
-      const m = /simpleicons\.org\/([^/]+)\//.exec(t.icon || "");
-      if (m) slugs.add(m[1]);
-    });
-    Object.values(PORTFOLIO.techIcons || {}).forEach(slug => { if (slug) slugs.add(slug); });
-
-    slugs.forEach(slug => {
-      new Image().src = 'https://cdn.simpleicons.org/' + slug + '/' + lilac;
-    });
-  }
-
-  let tintWarmTimer = null;
-  function queueIconTintPrefetch() {
-    clearTimeout(tintWarmTimer);
-    tintWarmTimer = setTimeout(prefetchIconTints, 400);
-  }
 
   function syncLiquidTitleAccent(rgb) {
     const svg = document.getElementById('hero-name-svg');
@@ -760,18 +683,8 @@
     root.setProperty('--lilac',      'rgb(' + lilac.r + ', ' + lilac.g + ', ' + lilac.b + ')');
     root.setProperty('--lilac-rgb',  lilac.r + ', ' + lilac.g + ', ' + lilac.b);
 
-    const lilacHex = rgbToHex(lilac.r, lilac.g, lilac.b).slice(1);
-    document.querySelectorAll('img[data-icon-slug]').forEach(img => {
-      const url = 'https://cdn.simpleicons.org/' + img.dataset.iconSlug + '/' + lilacHex;
-      img.dataset.pendingTint = url;
-      const loader = new Image();
-      loader.onload = () => {
-        if (img.dataset.pendingTint === url) img.src = url;
-      };
-      loader.src = url;
-    });
-
-    queueIconTintPrefetch();
+    // Tag/tech icons are CSS masks tinted with currentColor, so they track
+    // --lilac automatically — no per-image recolor needed here.
 
     syncLiquidTitleAccent(rgb);
 
@@ -1442,8 +1355,5 @@
   }
 
   if (settingsButtonShown()) ensureTweakPanel();
-
-  if ('requestIdleCallback' in window) requestIdleCallback(prefetchIconTints);
-  else setTimeout(prefetchIconTints, 1200);
 
 })();
