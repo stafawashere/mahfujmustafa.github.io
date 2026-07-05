@@ -31,7 +31,7 @@ const CURIE_ANIM_SCHEMA = {
   mouseEase:       { def: 0.38,  min: 0.02,  max: 0.4  },
   parallaxAmt:     { def: 0.008, min: 0,     max: 0.05 },
   parallaxEase:    { def: 0.02,  min: 0.02,  max: 0.3  },
-  coreOffsetX:     { def: -56,   min: -280,  max: 160  },
+  coreOffsetX:     { def: -69,   min: -280,  max: 160  },
   railOffsetX:     { def: 120,   min: -220,  max: 200  },
   idlePulseMs:     { def: 4800,  min: 2000,  max: 9000 },
   idlePulseAmp:    { def: 1,     min: 0,     max: 2    },

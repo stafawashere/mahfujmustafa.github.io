@@ -669,14 +669,17 @@
     const svg = document.getElementById('hero-name-svg');
     if (!svg) return;
 
-    const baseHue = hexToHsv('#7e88ff').h;
-    const hueShift = rgbToHsv(rgb.r, rgb.g, rgb.b).h - baseHue;
+    const accent = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    const referenceSat = 0.64;
+    const chromaLift = 1.5;
+    const satPull = accent.s / referenceSat;
 
     const retint = (hex) => {
       const c = hexToRgb(hex);
       if (!c) return hex;
       const hsv = rgbToHsv(c.r, c.g, c.b);
-      return hsvToHex(hsv.h + hueShift, hsv.s, hsv.v);
+      const sat = Math.min(1, hsv.s * chromaLift * satPull);
+      return hsvToHex(accent.h, sat, hsv.v);
     };
 
     svg.querySelectorAll('#liquid-skin stop').forEach(stop => {
@@ -1140,7 +1143,7 @@
 
       Object.keys(cfg).forEach(k => delete cfg[k]);
       try { localStorage.removeItem('curieAnimCfg'); } catch (e) {}
-      applyAccent('#7e88ff');
+      applyAccent('#5b8cff');
 
       const oldGear = document.getElementById('curie-gear');
       const oldDrawer = document.getElementById('curie-drawer');
@@ -1164,17 +1167,17 @@
     gear.title = 'animation settings';
     gear.setAttribute('aria-label', 'Animation settings');
     gear.style.cssText = [
-      'background: #131419; border: 1px solid var(--border-nav, #2a2b34); border-radius: 8px;',
-      'color: #6f7180; font-size: 16px; width: 34px; height: 34px; flex: none;',
+      'background: none; border: none; border-radius: 7px;',
+      'color: var(--text-muted); font-size: 13px; padding: 7px 12px; flex: none;',
       'cursor: pointer; display: none; align-items: center; justify-content: center;',
-      'transition: color .15s, border-color .15s;',
+      'font-family: var(--font); transition: color .15s, background .15s;',
     ].join('');
-    gear.innerHTML = '⚙';
+    gear.textContent = 'settings';
 
     function setOpen(open) {
       drawer.style.display = open ? 'block' : 'none';
-      gear.style.color       = open ? 'var(--lilac, #9d86ff)' : '#6f7180';
-      gear.style.borderColor = open ? 'rgba(var(--purple-rgb), 0.55)' : 'var(--border-nav, #2a2b34)';
+      gear.style.color      = open ? 'var(--lilac, #9d86ff)' : 'var(--text-muted)';
+      gear.style.background = 'none';
       gear.setAttribute('aria-expanded', String(open));
     }
     gear.setAttribute('aria-expanded', 'false');
@@ -1184,10 +1187,10 @@
       setOpen(drawer.style.display !== 'block');
     });
     gear.addEventListener('mouseenter', () => {
-      if (drawer.style.display !== 'block') { gear.style.color = 'var(--lilac, #9d86ff)'; gear.style.borderColor = 'rgba(var(--purple-rgb), 0.55)'; }
+      if (drawer.style.display !== 'block') { gear.style.color = 'var(--text-bright)'; gear.style.background = 'rgba(255, 255, 255, 0.04)'; }
     });
     gear.addEventListener('mouseleave', () => {
-      if (drawer.style.display !== 'block') { gear.style.color = '#6f7180'; gear.style.borderColor = 'var(--border-nav, #2a2b34)'; }
+      if (drawer.style.display !== 'block') { gear.style.color = 'var(--text-muted)'; gear.style.background = 'none'; }
     });
 
     drawer.addEventListener('click', e => e.stopPropagation());
@@ -1200,9 +1203,9 @@
     });
 
     const navBar = document.getElementById('nav');
-    const navSearch = document.getElementById('nav-search');
-    if (navBar && navSearch && navSearch.parentNode === navBar) {
-      navBar.insertBefore(gear, navSearch.nextSibling);
+    const navLinks = document.getElementById('nav-links');
+    if (navLinks) {
+      navLinks.appendChild(gear);
     } else if (navBar) {
       navBar.appendChild(gear);
     } else {
@@ -1263,7 +1266,7 @@
 
   let circuitSyncColors = null;
 
-  if (animCfg.accent) applyAccent(animCfg.accent);
+  applyAccent(animCfg.accent || '#5b8cff');
 
   const canvas = document.getElementById('circuit-canvas');
   let replayBoot;
@@ -1354,7 +1357,7 @@
   buildEducation();
   buildContact();
 
-  if (animCfg.accent) applyAccent(animCfg.accent);
+  applyAccent(animCfg.accent || '#5b8cff');
   buildChips(term);
   initSections();
   initSectionReveals();

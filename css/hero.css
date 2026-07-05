@@ -61,8 +61,7 @@
 
 .hero-role {
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
+  align-items: center;
   font-size: 19px;
   line-height: 1.4;
   min-height: calc(19px * 1.4);
@@ -74,6 +73,7 @@
   font-size: 13px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  margin-right: 10px;
 }
 
 .hero-role .value {
@@ -85,8 +85,8 @@
   display: inline-block;
   width: 9px;
   height: 1.05em;
+  margin-left: 3px;
   background: var(--purple);
-  vertical-align: -3px;
   animation: blink 1s steps(1) infinite;
 }
 
