@@ -860,13 +860,14 @@
    padding: 7px 14px;
 }
 
+
 .status-dot {
    position: relative;
    width: 7px;
    height: 7px;
    border-radius: 50%;
-   background: rgba(var(--purple-rgb), 0.95);
-   box-shadow: 0 0 10px rgba(var(--purple-rgb), 0.75);
+   background: rgba(74, 222, 128, 0.95);
+   box-shadow: 0 0 10px rgba(74, 222, 128, 0.75);
    animation: status-pulse 2.5s ease-in-out infinite;
    margin-right: 3px;
 }
@@ -876,7 +877,7 @@
    position: absolute;
    inset: -1px;
    border-radius: 50%;
-   border: 1px solid rgba(var(--purple-rgb), 0.6);
+   border: 1px solid rgba(74, 222, 128, 0.6);
    animation: status-ping 2.5s ease-out infinite;
 }
 
