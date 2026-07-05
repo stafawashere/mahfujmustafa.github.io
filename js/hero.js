@@ -167,7 +167,7 @@ function bootLiquidTitle(revealMs) {
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const lowPower = (navigator.hardwareConcurrency || 8) <= 4;
-  if (prefersReducedMotion || lowPower) {
+  if (prefersReducedMotion) {
     settle();
     return;
   }
