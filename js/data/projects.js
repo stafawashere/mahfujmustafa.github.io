@@ -9,7 +9,7 @@ window.PORTFOLIO.projects = [
     url:  'https://github.com/stafawashere/psychedelic-model-research',
     tech: ['Python', 'PyTorch'],
     featured: true,
-    desc: 'An experiment that drives a diffusion model with only knobs mapped to real brain variables — sensory precision, cortical gain — then watches whether the visual arc of a DMT trip emerges on its own. Nothing is drawn by hand.',
+    desc: 'An experiment that drives a diffusion model with only knobs mapped to real brain variables like sensory precision and cortical gain, then watches whether the visual arc of a DMT trip emerges on its own. Nothing is drawn by hand.',
   },
   {
     id:   'distribution-network',
@@ -17,9 +17,18 @@ window.PORTFOLIO.projects = [
     type: 'Full-Stack Web App',
     date: 'MAR 2026',
     url:  'https://github.com/stafawashere/dms',
-    tech: ['Next.js', 'TypeScript', 'PostgreSQL', 'Prisma'],
+    tech: ['TypeScript', 'PostgreSQL'],
     featured: true,
-    desc: 'A platform for distributors and the resellers beneath them, where each side logs into its own scoped portal — inventory tracking, bulk pricing tiers, and a sales-and-revenue dashboard.',
+    desc: 'A platform for distributors and the resellers beneath them, where each side logs into its own scoped portal, with inventory tracking, bulk pricing tiers, and a sales-and-revenue dashboard.',
+  },
+  {
+    id:   'trashy-apocalypse',
+    name: 'Trashy Apocalypse',
+    type: 'Arcade',
+    date: 'MAY 2026',
+    url:  'https://github.com/stafawashere/trashy-apocalypse',
+    tech: ['Python'],
+    desc: 'A top-down zombie survival shooter my team and I built on Python\'s Arcade library for AP CSP, and our school\'s entry at the annual arts event. You spray through waves of the undead across a trashed wasteland, a layered audio engine, and a high-score board.',
   },
   {
     id:   'allusion',
@@ -36,8 +45,8 @@ window.PORTFOLIO.projects = [
     type: 'Discord Bot',
     date: 'FEB 2026',
     url:  'https://github.com/stafawashere/ledger',
-    tech: ['Python', 'TinyDB'],
-    desc: 'A Discord bot for tracking balances, debts, and inventory — driven by slash commands and buttons, with a full history you can filter and export.',
+    tech: ['Python'],
+    desc: 'A Discord bot for tracking balances, debts, and inventory, driven by slash commands and buttons, with a full history you can filter and export.',
   },
   {
     id:   'disky',
@@ -45,7 +54,7 @@ window.PORTFOLIO.projects = [
     type: 'Discord API Wrapper',
     date: 'MAY 2024',
     url:  'https://github.com/stafawashere/Disky',
-    tech: ['Python', 'WebSockets'],
+    tech: ['Python'],
     desc: 'A Discord library I built from scratch, talking straight to Discord over WebSockets and HTTP instead of leaning on existing wrappers. It handles the connection, sessions, and events all on its own.',
   },
   {
@@ -54,7 +63,7 @@ window.PORTFOLIO.projects = [
     type: 'Portfolio Website',
     date: 'JUN 2026',
     url:  'https://github.com/stafawashere/stafawashere.github.io',
-    tech: ['JavaScript', 'HTML5 Canvas'],
-    desc: 'This site. No frameworks, just plain JavaScript — including a terminal you can actually type into with 35+ commands, and the animated circuit board running behind everything.',
+    tech: ['JavaScript', 'HTML5'],
+    desc: 'This site. No frameworks, just plain JavaScript, including a terminal you can actually type into with 35+ commands, and the animated circuit board running behind everything.',
   }
 ];

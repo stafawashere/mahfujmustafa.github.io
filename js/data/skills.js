@@ -39,9 +39,11 @@ Object.assign(window.PORTFOLIO, {
     'Python':     'python',
     'PyTorch':    'pytorch',
     'JavaScript': 'javascript',
+    'HTML5':      'html5',
     'EJS':        'ejs',
     'CSS':        'css3',
     'WebSockets': null,
     'TinyDB':     null,
+    'Arcade':     null,
   },
 });
