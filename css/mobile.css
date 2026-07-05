@@ -55,6 +55,13 @@
    }
 }
 
+@media (min-width: 641px) {
+   .hero-meta > span:nth-child(1) { order: 1; }
+   .hero-meta > span:nth-child(3) { order: 2; }
+   .hero-meta > span:nth-child(2) { order: 3; }
+   .hero-meta > .available { order: 4; }
+}
+
 @media (max-width: 640px) {
    #hero { padding: 112px 24px 64px; }
 

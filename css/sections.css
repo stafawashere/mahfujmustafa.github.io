@@ -903,6 +903,13 @@
   margin: 0 0 18px;
 }
 
+.contact-heading .liquid-word {
+   height: 1.24em;
+   width: auto;
+   overflow: visible;
+   vertical-align: -0.066em;
+}
+
 .contact-sub {
   font-size: 16px;
   line-height: 1.6;
