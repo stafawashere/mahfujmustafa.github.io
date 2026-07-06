@@ -548,7 +548,7 @@
 
       // Safety net: if the circuit never drives the reveal at all (unexpected —
       // e.g. hooks not wired), self-drive on a local clock after a grace window
-      // so the title can't sit molten forever. A live circuit — even a slow one
+      // so the title can't sit scrambling forever. A live circuit — even a slow one
       // — will have emitted progress by then, so we defer to it and skip this.
       const grace = coreLitMs() + 2000;
       setTimeout(() => {
@@ -1503,7 +1503,7 @@
       coreProgress = 0;
       coreLit = false;
       circuit.replayBoot();            // resets the boot clock; hooks re-fire
-      titleBoot = bootLiquidTitle();   // fresh molten title, gated on the boot
+      titleBoot = bootLiquidTitle();   // fresh title scramble, gated on the boot
       if (!eventDriven) startLocalBootFeed();
     };
   } else {

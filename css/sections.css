@@ -1122,18 +1122,14 @@
 #skills .section-body-content {
   margin-top: 3.9px;
 }
- — the SVG carries its own
-   gradient fill, so it needs no text color. Height is set relative to the
-   old 22px cap so the layout rhythm is unchanged; width follows the glyphs. */
-.node-title {
-  display: block;
-  line-height: 0;
-}
-
+/* the SVG carries its own gradient fill, so it needs no text color. Height is
+   set relative to the old 22px cap so the layout rhythm is unchanged; width
+   follows the glyphs. */
 .node-title {
   display: block;
   line-height: 0;
   position: relative;
+  font-size: 22px;
 }
 
 .node-title .liquid-title {
@@ -1141,16 +1137,15 @@
   height: 7em;
   width: auto;
   overflow: visible;
-  /* inactive: dimmed + desaturated, waiting for focus */
-  opacity: 0.4;
-  filter: grayscale(0.55) brightness(0.72) drop-shadow(0 2px 5px rgba(var(--purple-rgb), 0.1));
-  /* transition opacity ONLY: animating `filter` forces a full re-raster of the
-     turbulence/lighting-filtered glyphs every frame of the 0.5s ramp — a major
-     scroll-jank source since focus moves between headers while scrolling.
-     The filter states still switch (instantly), masked by the opacity fade. */
+  /* inactive: dimmed, waiting for focus. Opacity ONLY — no CSS `filter` on
+     this element, ever. The circuit hands `.is-focused` between headers on
+     every scroll pass, and any filter change (even an instant switch, or an
+     opacity fade running on a filtered element) forces a full re-raster of
+     the three turbulence/lighting SVG chains inside — the main scroll-jank
+     source. A bare opacity fade stays on the compositor. */
+  opacity: 0.32;
   transition: opacity .5s ease;
 }
-.node-title { font-size: 22px; }
 
 /* focused (synced with the circuit's active node) OR hover — full life.
    Note: is-open (content expanded) does NOT brighten the title; only the
@@ -1158,7 +1153,6 @@
 .section-header.is-focused .liquid-title,
 .section-header:hover .liquid-title {
   opacity: 1;
-  filter: grayscale(0) brightness(1) drop-shadow(0 2px 8px rgba(var(--lilac-rgb), 0.24));
 }
 
 /* shimmer overlay — a bright clone revealed through a narrow band that sweeps

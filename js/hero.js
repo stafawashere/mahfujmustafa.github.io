@@ -82,7 +82,6 @@ function animateHeroCount(el, target, durationMs) {
 }
 
 const LIQUID_REST_WARP  = { scale: 3, blur: 3.5 };
-const LIQUID_MOLTEN_WARP = { scale: 84, blur: 13 };
 
 const LIQUID_REST_LIGHT = {
   diffuse: [194, 198, 220],
@@ -186,17 +185,17 @@ function bootLiquidTitle() {
   // The boot is GATED on the circuit. `extProgress` (0→1) mirrors how lit the
   // core chip is — fed in via setProgress() from the circuit boot loop — and the
   // name only crystallises + fires its glint sweep once the core is fully lit
-  // (extProgress hits 1, or finish() is called). Until then it stays molten.
+  // (extProgress hits 1, or finish() is called). Until then it keeps scrambling.
   const sweepDur = 620;
-  const tickMs = 50;   // 20Hz molten wobble
+  const tickMs = 50;   // 20Hz scramble
   let extProgress = 0;
   let finished = false;
   let lastTick = 0;
   let sweepStart = 0;
 
   setLines("", "");
-  setWarp(LIQUID_MOLTEN_WARP.scale, LIQUID_MOLTEN_WARP.blur);
-  setLighting(hotLight.diffuse, hotLight.sheen, hotLight.glint);
+  setWarp(LIQUID_REST_WARP.scale, LIQUID_REST_WARP.blur);
+  setLighting(LIQUID_REST_LIGHT.diffuse, LIQUID_REST_LIGHT.sheen, LIQUID_REST_LIGHT.glint);
   if (ink) ink.style.opacity = "0";
 
   // Park the glint chain at rest values and skip rastering shadow + glint
@@ -212,17 +211,6 @@ function bootLiquidTitle() {
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 
   function paintSettle(t, scramble) {
-    const eased = 1 - Math.pow(1 - t, 3);
-    const scale = LIQUID_MOLTEN_WARP.scale + (LIQUID_REST_WARP.scale - LIQUID_MOLTEN_WARP.scale) * eased;
-    const blur  = LIQUID_MOLTEN_WARP.blur  + (LIQUID_REST_WARP.blur  - LIQUID_MOLTEN_WARP.blur)  * eased;
-    setWarp(scale.toFixed(2), blur.toFixed(2));
-
-    setLighting(
-      mixRgb(hotLight.diffuse, LIQUID_REST_LIGHT.diffuse, eased),
-      mixRgb(hotLight.sheen, LIQUID_REST_LIGHT.sheen, eased),
-      mixRgb(hotLight.glint, LIQUID_REST_LIGHT.glint, eased)
-    );
-
     if (ink) ink.style.opacity = clamp(t / 0.3, 0, 1).toFixed(3);
 
     if (!scramble) return;
@@ -268,7 +256,7 @@ function bootLiquidTitle() {
   function frame(now) {
     if (gen !== liquidBootGen) return;
 
-    // Phase 1 — molten scramble, paced by the circuit's core-fill progress.
+    // Phase 1 — letter scramble, paced by the circuit's core-fill progress.
     if (!sweepStart) {
       const t = clamp(extProgress, 0, 1);
 
