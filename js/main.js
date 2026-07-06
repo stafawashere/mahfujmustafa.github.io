@@ -276,6 +276,22 @@
       const el = document.getElementById(id);
       if (el) io.observe(el);
     });
+
+    // Scroll-active gate: the ambient blur/blend animations (card glow drift,
+    // contact glow, hero glow) mutate large mix-blend-mode layers every frame;
+    // during a scroll that combines with compositor work into visible jank.
+    // Pause them while the page is actually moving — invisible to the eye,
+    // and they resume ~150ms after the last scroll event.
+    let settleTimer = 0;
+    const root = document.documentElement;
+    window.addEventListener('scroll', () => {
+      if (!settleTimer) root.classList.add('is-scrolling');
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        settleTimer = 0;
+        root.classList.remove('is-scrolling');
+      }, 150);
+    }, { passive: true });
   }
 
   function initAutoFocus() {

@@ -70,6 +70,19 @@
 .fx-paused .card-fx::before,
 .fx-paused .contact-card-glow { animation-play-state: paused; }
 
+/* Scroll-active gate (html.is-scrolling, toggled in main.js initFxGating):
+   while the page is moving, freeze every ambient repaint-heavy animation —
+   the blur/blend glows above plus the card-breath and contact sheen layers.
+   Mutating those layers mid-scroll forces per-frame re-raster of large
+   mix-blend-mode surfaces, which reads as scroll lag. Paused, scrolling is
+   compositor-only; they resume 150ms after the last scroll event. */
+html.is-scrolling .hero-glow,
+html.is-scrolling .card-fx,
+html.is-scrolling .card-fx::before,
+html.is-scrolling .card-fx::after,
+html.is-scrolling .contact-card-glow,
+html.is-scrolling .contact-card::after { animation-play-state: paused; }
+
 .section-reveal {
    opacity: 0;
    transform: translateY(26px);

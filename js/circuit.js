@@ -1421,7 +1421,12 @@ function initCircuit(host, getAnimCfg, isAlive, hooks) {
     rBegin();
 
     buildRail(railX);
-    const railOp = clamp(0.85 + st.energy * 0.45, 0, 1).toFixed(2);
+    // Quantized to 0.05 steps: the rail group spans the full document height,
+    // so every opacity write repaints a page-sized layer. At .01 precision the
+    // scroll-energy easing produced a new value (= full-height repaint) every
+    // frame of every scroll — the dominant cause of scroll jank. Coarse steps
+    // keep the brighten-on-scroll effect with ~1/10th the invalidations.
+    const railOp = (Math.round(clamp(0.85 + st.energy * 0.45, 0, 1) * 20) / 20).toFixed(2);
     if (layers.rail.__op !== railOp) { layers.rail.__op = railOp; layers.rail.style.opacity = railOp; }
 
     drawNodes(g, railX, dt, ts, sy, vh);

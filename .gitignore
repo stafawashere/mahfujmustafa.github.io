@@ -25,3 +25,5 @@ perf/package.json
 perf/harness.mjs
 perf/harness.mjs
 .gitignore
+perf/dynamic-audit-out.txt
+.gitignore
