@@ -1,0 +1,47 @@
+# Deploys the site to GitHub Pages on every push, stamping the commit SHA into
+# index.html so each deploy resets every visitor's saved board settings to the
+# new defaults (see the <meta name="site-build"> gate in index.html).
+#
+# ONE-TIME SETUP: in the repo, go to Settings -> Pages -> "Build and deployment"
+# and set Source to "GitHub Actions". (CNAME + .nojekyll are served as normal
+# because the whole repo root is uploaded as the artifact.)
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stamp build id (commit SHA)
+        run: sed -i "s/__BUILD_ID__/${GITHUB_SHA}/g" index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

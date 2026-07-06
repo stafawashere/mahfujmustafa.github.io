@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mahfuj Mustafa</title>
   <link rel="icon" type="image/svg+xml" href="icons/icon-chip.svg">
+
+  <!-- Deploy stamp: replaced with the commit SHA by the Pages workflow on every
+       push. Unstamped locally, so local dev keeps your saved settings. -->
+  <meta name="site-build" content="__BUILD_ID__">
+  <script>
+    /* On a new deploy the stamp changes; when a returning visitor's stored
+       build id no longer matches, forget any board settings they saved from
+       the previous version so everyone lands on the new defaults. Runs before
+       the deferred app scripts read the config. */
+    (function () {
+      try {
+        var b = document.querySelector('meta[name="site-build"]').getAttribute('content');
+        if (!b || b === '__' + 'BUILD_ID__') return;           /* not stamped (local) */
+        if (localStorage.getItem('curieBuildId') !== b) {
+          localStorage.removeItem('curieAnimCfg');
+          localStorage.setItem('curieBuildId', b);
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
@@ -21,7 +41,7 @@
 </head>
 <body>
 
-  <canvas id="circuit-canvas"></canvas>
+  <svg id="circuit-canvas" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
 
   <div id="root">
 
@@ -41,7 +61,7 @@
       <div id="nav-links"></div>
     </nav>
 
-    <header id="hero" id="top">
+    <header id="hero">
       <div class="hero-glow"></div>
 
       <div class="hero-meta">
@@ -51,6 +71,10 @@
         <span class="available">
           available for work<span class="dot"></span>
         </span>
+
+        <div class="meta-circuit" aria-hidden="true">
+          <canvas></canvas>
+        </div>
       </div>
 
       <h1 id="hero-name" data-cnode="core" aria-label="Mahfuj Mustafa">
@@ -65,6 +89,18 @@
               <stop offset="72%" stop-color="#eceefb"/>
               <stop offset="88%" stop-color="#ffffff"/>
               <stop offset="100%" stop-color="#b2b8d8"/>
+            </linearGradient>
+
+            <!-- whiter variant for section titles: mostly white, only hints of accent -->
+            <linearGradient id="liquid-skin-title" x1="0" y1="0" x2="0.1" y2="1">
+              <stop offset="0%"  stop-color="#ffffff"/>
+              <stop offset="15%" stop-color="#f8f9fe"/>
+              <stop offset="33%" stop-color="#e4e6f3"/>
+              <stop offset="47%" stop-color="#c6cae2"/>
+              <stop offset="55%" stop-color="#daddef"/>
+              <stop offset="72%" stop-color="#f7f8fe"/>
+              <stop offset="88%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#e0e2f1"/>
             </linearGradient>
 
             <filter id="liquid-inflate" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
@@ -166,7 +202,7 @@
           <div class="term-traffic">
             <button class="traffic-btn traffic-close" id="win-close" title="close">×</button>
             <button class="traffic-btn traffic-min"   id="win-min"   title="minimize">–</button>
-            <button class="traffic-btn traffic-max"   id="win-max"   title="maximize" id="win-max-btn">+</button>
+            <button class="traffic-btn traffic-max"   id="win-max"   title="maximize">+</button>
           </div>
           <div id="term-title">
             <span>visitor</span><span>@</span><span>mahfujmustafa.dev: ~ — zsh</span>
@@ -194,11 +230,12 @@
       </div>
     </div>
 
-    <section id="skills" class="content-section section-reveal">
+    <section id="skills" class="content-section">
       <div class="section-header" data-section="skills">
-        <span class="section-label"><span class="section-arrow">&gt;</span> skills</span>
-        <span class="section-divider"></span>
-        <span class="section-count">01 / 05</span>
+        <div class="node-id">
+          <span class="node-title" data-word="skills" aria-label="skills"></span>
+        </div>
+        <div class="node-trace" aria-hidden="true"></div>
       </div>
       <div class="section-body" id="skills-body">
         <div class="section-body-inner">
@@ -220,11 +257,12 @@
       </div>
     </section>
 
-    <section id="work" class="content-section section-reveal">
+    <section id="work" class="content-section">
       <div class="section-header" data-section="work">
-        <span class="section-label"><span class="section-arrow">&gt;</span> projects</span>
-        <span class="section-divider"></span>
-        <span class="section-count">02 / 05</span>
+        <div class="node-id">
+          <span class="node-title" data-word="projects" aria-label="projects"></span>
+        </div>
+        <div class="node-trace" aria-hidden="true"></div>
       </div>
       <div class="section-body" id="work-body">
         <div class="section-body-inner">
@@ -236,11 +274,12 @@
       </div>
     </section>
 
-    <section id="experience" class="content-section section-reveal">
+    <section id="experience" class="content-section">
       <div class="section-header" data-section="experience">
-        <span class="section-label"><span class="section-arrow">&gt;</span> experience</span>
-        <span class="section-divider"></span>
-        <span class="section-count">03 / 05</span>
+        <div class="node-id">
+          <span class="node-title" data-word="experience" aria-label="experience"></span>
+        </div>
+        <div class="node-trace" aria-hidden="true"></div>
       </div>
       <div class="section-body" id="experience-body">
         <div class="section-body-inner">
@@ -252,11 +291,12 @@
       </div>
     </section>
 
-    <section id="education" class="content-section section-reveal">
+    <section id="education" class="content-section">
       <div class="section-header" data-section="education">
-        <span class="section-label"><span class="section-arrow">&gt;</span> education</span>
-        <span class="section-divider"></span>
-        <span class="section-count">04 / 05</span>
+        <div class="node-id">
+          <span class="node-title" data-word="education" aria-label="education"></span>
+        </div>
+        <div class="node-trace" aria-hidden="true"></div>
       </div>
       <div class="section-body" id="education-body">
         <div class="section-body-inner">
@@ -270,9 +310,10 @@
 
     <section id="contact" class="content-section section-reveal">
       <div class="section-header" data-section="contact">
-        <span class="section-label"><span class="section-arrow">&gt;</span> contact</span>
-        <span class="section-divider"></span>
-        <span class="section-count">05 / 05</span>
+        <div class="node-id">
+          <span class="node-title" data-word="contact" aria-label="contact"></span>
+        </div>
+        <div class="node-trace" aria-hidden="true"></div>
       </div>
       <div class="section-body" id="contact-body">
         <div class="section-body-inner">
@@ -363,6 +404,7 @@
   <script defer src="js/data/education.js"></script>
 
   <script defer src="js/circuit.js"></script>
+  <script defer src="js/meta-circuit.js"></script>
 
   <script defer src="js/terminal/banners.js"></script>
   <script defer src="js/terminal/framework/registry.js"></script>
@@ -377,6 +419,84 @@
   <script defer src="js/palette.js"></script>
   <script defer src="js/window.js"></script>
   <script defer src="js/main.js"></script>
+
+  <!-- section titles rendered in the hero's liquid (Pacifico) skin, reusing the
+       shared #liquid-* filters/gradient from the hero SVG. viewBox is measured
+       from the glyph bbox once fonts are ready so every word sizes correctly. -->
+  <script>
+  (function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    function build(span) {
+      var word = span.getAttribute('data-word');
+      var svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('class', 'liquid-title');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('preserveAspectRatio', 'xMinYMid meet');
+      var g = document.createElementNS(NS, 'g');
+      g.setAttribute('fill', 'url(#liquid-skin-title)');
+      g.setAttribute('stroke', 'url(#liquid-skin-title)');
+      g.setAttribute('stroke-width', '2');
+      g.setAttribute('stroke-linejoin', 'round');
+      g.setAttribute('stroke-linecap', 'round');
+      g.setAttribute('font-family', "'Pacifico',cursive");
+      g.setAttribute('paint-order', 'stroke fill');
+      ['#liquid-shadow', '#liquid-inflate', '#liquid-glint'].forEach(function (f) {
+        var t = document.createElementNS(NS, 'text');
+        t.setAttribute('x', '10'); t.setAttribute('y', '225');
+        t.setAttribute('font-size', '200');
+        t.setAttribute('filter', 'url(' + f + ')');
+        t.textContent = word;
+        g.appendChild(t);
+      });
+      svg.appendChild(g);
+      span.appendChild(svg);
+
+      // shimmer overlay: a bright-white clone masked by a sweeping band. It
+      // lives on top of the title and is fired (right→left) by the circuit
+      // renderer the instant the packet lands on the left footprint.
+      var shim = document.createElementNS(NS, 'svg');
+      shim.setAttribute('class', 'liquid-shimmer');
+      shim.setAttribute('aria-hidden', 'true');
+      shim.setAttribute('preserveAspectRatio', 'xMinYMid meet');
+      var g2 = g.cloneNode(true);
+      g2.setAttribute('fill', '#ffffff');
+      g2.setAttribute('stroke', '#ffffff');
+      shim.appendChild(g2);
+      span.appendChild(shim);
+
+      return { svg: svg, shim: shim, g: g };
+    }
+    function measure(built) {
+      var b;
+      try { b = built.g.getBBox(); } catch (e) { return false; }
+      if (!b || !b.width) return false;
+      // pad for the inflate/glint displacement filters (they bleed ~11-15%)
+      var px = b.width * 0.09, py = b.height * 0.16;
+      var vb = (b.x - px) + ' ' + (b.y - py) + ' ' +
+        (b.width + px * 2) + ' ' + (b.height + py * 2);
+      built.svg.setAttribute('viewBox', vb);
+      built.shim.setAttribute('viewBox', vb);
+      built.svg.setAttribute('data-sized', '1');
+      return true;
+    }
+    function run() {
+      var built = [].map.call(document.querySelectorAll('.node-title[data-word]'), build);
+      function pass() {
+        var allDone = built.every(function (x) {
+          return x.svg.getAttribute('data-sized') || measure(x);
+        });
+        if (!allDone) requestAnimationFrame(pass);
+      }
+      pass();
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () { built.forEach(measure); });
+      }
+    }
+    if (document.readyState === 'loading')
+      document.addEventListener('DOMContentLoaded', run);
+    else run();
+  })();
+  </script>
 
 </body>
 </html>

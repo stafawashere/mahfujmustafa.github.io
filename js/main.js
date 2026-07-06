@@ -522,9 +522,11 @@
     const ingressMs = read('bootIngressMs');
     const fillMs    = read('bootFillMs');
     const fullFrac  = read('coreFullFrac');
-    const fillToFullMs = (1 - Math.pow(1 - fullFrac, 1 / 3)) * fillMs;
 
-    return arriveMs + ingressMs + fillToFullMs;
+    // core "fully lit" = the fill phase has swept in to coreFullFrac. Kept in
+    // lock-step with the circuit's own coreLitMs() so the title reveal, the
+    // count-up, and the boot animation all resolve on the same beat.
+    return arriveMs + ingressMs + fillMs * fullFrac;
   }
 
   function terminalOpenedBefore() {
@@ -534,13 +536,24 @@
   function initHero() {
     initLiquidTitle();
 
-    const bootAt = performance.now();
     let titleStarted = false;
     const startTitle = () => {
       if (titleStarted) return;
       titleStarted = true;
-      const waited = performance.now() - bootAt;
-      bootLiquidTitle(Math.max(540, coreLitMs() - waited));
+      titleBoot = bootLiquidTitle();
+      // catch up to whatever the circuit boot has already reached, so a late
+      // start (slow fonts) picks up mid-boot instead of restarting the clock
+      titleBoot.setProgress(coreProgress);
+      if (coreLit) { titleBoot.finish(); return; }
+
+      // Safety net: if the circuit never drives the reveal at all (unexpected —
+      // e.g. hooks not wired), self-drive on a local clock after a grace window
+      // so the title can't sit molten forever. A live circuit — even a slow one
+      // — will have emitted progress by then, so we defer to it and skip this.
+      const grace = coreLitMs() + 2000;
+      setTimeout(() => {
+        if (!coreLit && coreProgress <= 0) startLocalBootFeed();
+      }, grace);
     };
     if (document.fonts && document.fonts.load) {
       document.fonts.load('200px Pacifico').then(startTitle, startTitle);
@@ -555,7 +568,12 @@
     }
 
     const rotorEl = document.getElementById('hero-rotor');
-    if (rotorEl) startRotor(rotorEl);
+    if (rotorEl) {
+      // hold the roles rotor until the liquid title has fully loaded
+      if (window.__curieTitleReady) startRotor(rotorEl);
+      else document.addEventListener('curie:title-ready',
+        () => startRotor(rotorEl), { once: true });
+    }
 
     const workBtn    = document.getElementById('hero-work-btn');
     const contactBtn = document.getElementById('hero-contact-btn');
@@ -611,6 +629,48 @@
   function initLogo() {
     const logo = document.getElementById('nav-logo');
     if (logo) logo.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+
+  // Scroll-focus brightening for section headers, independent of the circuit.
+  // On desktop the board's draw loop owns `.is-focused` (it lights the node
+  // nearest the 40% viewport line); below 561px the board never runs, so this
+  // mirrors that same rule off a lightweight scroll listener. Guarded to the
+  // no-chip viewport so the two never fight over the class.
+  function initSectionFocusFallback() {
+    if (document.documentElement.clientWidth > 560) return;
+    const SECTIONS = ['#skills', '#experience', '#work', '#education', '#contact'];
+    const heads = SECTIONS
+      .map(sel => document.querySelector(sel + ' .section-header'))
+      .filter(Boolean);
+    if (!heads.length) return;
+
+    let current = null, ticking = false;
+    function update() {
+      ticking = false;
+      const vh = window.innerHeight;
+      const line = vh * 0.4;      // same focus line the circuit uses
+      const band = vh * 0.5;      // outside the band nothing is focused
+      let best = 1e9, active = null;
+      for (const h of heads) {
+        const r = h.getBoundingClientRect();
+        const d = Math.abs((r.top + r.height / 2) - line);
+        if (d < best) { best = d; active = h; }
+      }
+      if (best > band) active = null;
+      if (active !== current) {
+        if (current) current.classList.remove('is-focused');
+        if (active) active.classList.add('is-focused');
+        current = active;
+      }
+    }
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
   }
 
   function buildContact() {
@@ -671,7 +731,9 @@
 
     const accent = rgbToHsv(rgb.r, rgb.g, rgb.b);
     const referenceSat = 0.64;
-    const chromaLift = 1.5;
+    // accent 30% weaker than the original 1.5 boost → the liquid title reads
+    // more white, with only a soft hint of the accent hue.
+    const chromaLift = 1.05;
     const satPull = accent.s / referenceSat;
 
     const retint = (hex) => {
@@ -709,226 +771,171 @@
     syncLiquidTitleAccent(rgb);
 
     if (circuitSyncColors) circuitSyncColors();
+    // Meta-circuit reads --lilac-rgb into its own palette + bakes it into an
+    // offscreen skeleton, so it needs an explicit nudge to pick up the new
+    // accent (otherwise the static traces stay stale until the next resize).
+    if (window.MetaCircuit && window.MetaCircuit.syncColors) window.MetaCircuit.syncColors();
   }
+
+  /* ── settings: "board.cfg" — a draggable tuner window ──────────────────
+     Rebuilt from scratch in the terminal-window family (traffic dot, mono
+     type, quiet chrome). Sections sit in a left rail with circuit-pad
+     indicators; panes show only label + value + slider, and every
+     control's help text is read in ONE status bar at the bottom by
+     hovering it. The window drags by its titlebar, remembers position,
+     and stays open while you interact with the board behind it. */
 
   function injectTweakStyles() {
     if (document.getElementById('curie-tweak-style')) return;
     const s = document.createElement('style');
     s.id = 'curie-tweak-style';
     s.textContent = `
-      .cp-range { -webkit-appearance:none; appearance:none; flex:1; height:4px; border-radius:3px;
-        background:#23242b; outline:none; cursor:pointer; }
-      .cp-range::-webkit-slider-runnable-track { height:4px; border-radius:3px;
-        background:linear-gradient(to right, var(--purple) var(--fill,0%), #23242b var(--fill,0%)); }
-      .cp-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:13px; height:13px;
-        margin-top:-4.5px; border-radius:50%; background:#fff; border:2px solid var(--purple);
-        box-shadow:0 1px 4px rgba(0,0,0,.55); cursor:grab; transition:transform .1s; }
-      .cp-range::-webkit-slider-thumb:active { transform:scale(1.25); cursor:grabbing; }
-      .cp-range::-moz-range-track { height:4px; border-radius:3px; background:#23242b; }
-      .cp-range::-moz-range-progress { height:4px; border-radius:3px; background:var(--purple); }
-      .cp-range::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff;
-        border:2px solid var(--purple); box-shadow:0 1px 4px rgba(0,0,0,.55); cursor:grab; }
-      .cp-check { -webkit-appearance:none; appearance:none; width:34px; height:18px; border-radius:10px;
-        background:#23242b; border:1px solid #2a2b34; position:relative; cursor:pointer; transition:background .15s; flex:none; }
-      .cp-check:checked { background:var(--purple); border-color:var(--purple); }
-      .cp-check::after { content:''; position:absolute; top:1px; left:1px; width:14px; height:14px;
-        border-radius:50%; background:#fff; transition:transform .15s; }
-      .cp-check:checked::after { transform:translateX(16px); }
-      .cp { margin:4px 0 2px; padding:10px; background:#15161c; border:1px solid #2a2b34;
-        border-radius:8px; display:flex; flex-direction:column; gap:9px; }
-      .cp-sl { position:relative; width:100%; height:92px; border-radius:6px; cursor:crosshair; touch-action:none; }
-      .cp-sl-h { position:absolute; width:12px; height:12px; border-radius:50%; border:2px solid #fff;
-        transform:translate(-50%,-50%); box-shadow:0 0 0 1.5px rgba(0,0,0,.45); pointer-events:none; }
-      .cp-hue { position:relative; width:100%; height:12px; border-radius:6px; cursor:pointer; touch-action:none;
+      #curie-drawer { position:fixed; z-index:1000; display:none; flex-direction:column;
+        width:462px; max-width:calc(100vw - 20px); max-height:min(82vh, 620px);
+        min-width:360px; min-height:250px; overflow:hidden;
+        background:var(--bg-term); border:1px solid #23242b; border-radius:14px;
+        box-shadow:0 40px 90px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(var(--purple-rgb),.06);
+        color:var(--text-code); font-family:var(--font); font-size:12px;
+        opacity:0; transform:translateY(8px) scale(.985); }
+      #curie-drawer.st-anim { transition:opacity .2s ease, transform .22s cubic-bezier(.2,.85,.3,1.15); }
+      #curie-drawer.st-open { opacity:1; transform:none; }
+      .st-titlebar { display:flex; align-items:center; gap:12px; padding:11px 14px; flex:none;
+        background:linear-gradient(180deg,#14151b,#0e0f13); border-bottom:1px solid var(--border);
+        cursor:move; user-select:none; touch-action:none; }
+      .st-close { width:12px; height:12px; border-radius:50%; border:none; padding:0; flex:none;
+        background:#f0726b; color:#5b0f0c; cursor:pointer; font-size:9px; line-height:1;
+        display:flex; align-items:center; justify-content:center; font-family:inherit; }
+      .st-close span { opacity:0; transition:opacity .12s; }
+      .st-titlebar:hover .st-close span { opacity:1; }
+      .st-title { font-size:12px; color:var(--text-dim); white-space:nowrap; }
+      .st-title b { color:var(--text-bright); font-weight:600; }
+      .st-status { margin-left:auto; font-size:10px; color:var(--lilac); white-space:nowrap;
+        opacity:0; transition:opacity .18s; }
+      .st-status.show { opacity:1; }
+      .st-body { display:flex; flex:1 1 auto; min-height:0; }
+      .st-nav { flex:none; width:116px; display:flex; flex-direction:column; gap:2px; padding:10px 8px;
+        background:#0a0b0e; border-right:1px solid var(--border); }
+      .st-nav-btn { display:flex; align-items:center; gap:9px; padding:8px 9px; border:none; border-radius:7px;
+        background:transparent; color:var(--text-muted); font-family:inherit; font-size:11.5px; text-align:left;
+        cursor:pointer; transition:color .15s, background .15s; }
+      .st-nav-btn:hover { color:var(--text-bright); background:rgba(255,255,255,.035); }
+      .st-nav-btn.on { color:var(--lilac); background:rgba(var(--purple-rgb),.13); }
+      .st-pad { width:7px; height:7px; border-radius:50%; border:1.5px solid #33343d; flex:none;
+        transition:border-color .15s, background .15s, box-shadow .15s; }
+      .st-nav-btn.on .st-pad { border-color:rgba(var(--lilac-rgb),.9); background:var(--purple); box-shadow:0 0 7px rgba(var(--purple-rgb),.8); }
+      .st-nav-foot { margin-top:auto; padding-top:6px; border-top:1px solid #16171c; display:flex; flex-direction:column; gap:2px; }
+      .st-nav-act { color:var(--text-dim); font-size:10.5px; }
+      .st-main { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
+      .st-pane { flex:1 1 auto; min-height:0; padding:15px 16px 3px; overflow-y:auto;
+        scrollbar-width:thin; scrollbar-color:#2b2c34 transparent; }
+      .st-pane::-webkit-scrollbar { width:10px; }
+      .st-pane::-webkit-scrollbar-track { background:transparent; }
+      .st-pane::-webkit-scrollbar-thumb { background:#2b2c34; border-radius:8px;
+        border:3px solid var(--bg-term); background-clip:padding-box; }
+      .st-pane::-webkit-scrollbar-thumb:hover { background:#3a3b45; }
+      .st-pane.fx { animation:stPaneIn .22s ease; }
+      @keyframes stPaneIn { from { opacity:0; transform:translateX(7px); } }
+      .st-sec { font-size:11px; color:var(--text-faint); margin:0 0 14px; }
+      .st-row { margin:0 0 15px; }
+      .st-row-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:5px; }
+      .st-lbl { color:var(--text-body); font-size:12px; }
+      .st-val { color:var(--lilac); font-weight:600; font-variant-numeric:tabular-nums; font-size:12px; }
+      .st-range { -webkit-appearance:none; appearance:none; display:block; width:100%; height:20px; margin:0; background:transparent; cursor:pointer; }
+      .st-range::-webkit-slider-runnable-track { height:3px; border-radius:2px;
+        background:linear-gradient(to right, var(--purple) var(--fill,0%), #1e1f26 var(--fill,0%)); }
+      .st-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:13px; height:13px; margin-top:-5px; border-radius:50%;
+        background:#e9eaf2; border:2px solid var(--purple); box-shadow:0 1px 5px rgba(0,0,0,.6); transition:transform .12s, box-shadow .12s; }
+      .st-range:hover::-webkit-slider-thumb { box-shadow:0 0 0 4px rgba(var(--purple-rgb),.16), 0 1px 5px rgba(0,0,0,.6); }
+      .st-range:active::-webkit-slider-thumb { transform:scale(1.22); }
+      .st-range::-moz-range-track { height:3px; border-radius:2px; background:#1e1f26; }
+      .st-range::-moz-range-progress { height:3px; border-radius:2px; background:var(--purple); }
+      .st-range::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:#e9eaf2; border:2px solid var(--purple); }
+      .st-info { flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px;
+        padding:8px 14px; border-top:1px solid var(--border); background:#0a0b0e;
+        font-size:10.5px; line-height:1.5; color:var(--text-dim); }
+      .st-info-range { color:var(--text-faint); white-space:nowrap; flex:none; }
+      .st-swatches { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; margin-bottom:13px; }
+      .st-swatch { height:26px; border-radius:6px; border:1px solid rgba(255,255,255,.12); cursor:pointer; padding:0;
+        transition:transform .12s, border-color .12s, box-shadow .12s; }
+      .st-swatch:hover { transform:translateY(-1px); }
+      .st-swatch.on { border-color:#fff; box-shadow:0 0 0 2px rgba(var(--purple-rgb),.45); }
+      .st-sv { position:relative; height:108px; border-radius:8px; cursor:crosshair; touch-action:none; border:1px solid #23242b; }
+      .st-sv-h { position:absolute; width:13px; height:13px; border-radius:50%; border:2px solid #fff;
+        transform:translate(-50%,-50%); box-shadow:0 0 0 1.5px rgba(0,0,0,.5); pointer-events:none; }
+      .st-hue { position:relative; height:11px; border-radius:6px; margin:11px 0; cursor:pointer; touch-action:none;
         background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
-      .cp-hue-h { position:absolute; top:50%; width:14px; height:14px; border-radius:50%; background:#fff;
-        border:2px solid #fff; transform:translate(-50%,-50%); box-shadow:0 0 0 1.5px rgba(0,0,0,.5); pointer-events:none; }
-      .cp-bottom { display:flex; align-items:center; gap:8px; }
-      .cp-sw { width:30px; height:26px; border-radius:6px; border:1px solid #2a2b34; flex:none; }
-      .cp-hex { flex:1; min-width:0; background:#0e0f13; border:1px solid #2a2b34; border-radius:6px;
-        color:#c3c5cd; font-family:var(--font); font-size:12px; padding:6px 8px; outline:none; text-transform:lowercase; }
-      .cp-hex:focus { border-color:var(--purple); }
-      .cp-presets { display:flex; gap:6px; flex-wrap:wrap; }
-      .cp-preset { width:22px; height:22px; border-radius:5px; border:1px solid rgba(255,255,255,.14);
-        cursor:pointer; padding:0; transition:transform .1s; }
-      .cp-preset:hover { transform:scale(1.12); }
+      .st-hue-h { position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:#fff;
+        transform:translate(-50%,-50%); box-shadow:0 0 0 1.5px rgba(0,0,0,.55); pointer-events:none; }
+      .st-hexrow { display:flex; gap:8px; align-items:center; }
+      .st-resize { position:absolute; right:0; bottom:0; width:18px; height:18px; z-index:3;
+        cursor:nwse-resize; touch-action:none;
+        background:linear-gradient(135deg, transparent 0 45%, #3a3b45 45% 53%, transparent 53% 66%, #3a3b45 66% 74%, transparent 74%);
+        opacity:.55; transition:opacity .12s; }
+      .st-resize:hover { opacity:1; }
+      .st-cur { width:34px; height:28px; border-radius:6px; border:1px solid #23242b; flex:none; }
+      .st-hex { flex:1; min-width:0; background:#0a0b0e; border:1px solid #23242b; border-radius:6px; color:var(--text-code);
+        font-family:inherit; font-size:12px; padding:7px 9px; outline:none; text-transform:lowercase; }
+      .st-hex:focus { border-color:var(--purple); }
+      @media (max-width:560px) { #curie-drawer { width:calc(100vw - 20px); } .st-nav { width:94px; } }
     `;
     document.head.appendChild(s);
   }
 
-  function createColorPicker(initialHex, onChange) {
-    const clmp = (n, a, b) => (n < a ? a : n > b ? b : n);
-    let hsv = hexToHsv(initialHex);
-
-    const root = document.createElement('div');
-    root.className = 'cp';
-
-    const sl       = document.createElement('div'); sl.className = 'cp-sl';
-    const slHandle = document.createElement('div'); slHandle.className = 'cp-sl-h'; sl.appendChild(slHandle);
-    const hue      = document.createElement('div'); hue.className = 'cp-hue';
-    const hueHandle= document.createElement('div'); hueHandle.className = 'cp-hue-h'; hue.appendChild(hueHandle);
-
-    const bottom = document.createElement('div'); bottom.className = 'cp-bottom';
-    const sw     = document.createElement('div'); sw.className = 'cp-sw';
-    const hex    = document.createElement('input');
-    hex.className = 'cp-hex'; hex.type = 'text'; hex.spellcheck = false; hex.maxLength = 7;
-    bottom.appendChild(sw); bottom.appendChild(hex);
-
-    const presets = document.createElement('div'); presets.className = 'cp-presets';
-    ['#7e88ff','#7c5cff','#5b8cff','#3fb6c9','#3ecf8e','#e0b341','#f0726b','#e0568f','#b15cf0','#9aa0ad']
-      .forEach(c => {
-        const p = document.createElement('button');
-        p.type = 'button'; p.className = 'cp-preset'; p.style.background = c; p.title = c;
-        p.addEventListener('click', () => { hsv = hexToHsv(c); render(); emit(); });
-        presets.appendChild(p);
-      });
-
-    root.appendChild(sl); root.appendChild(hue); root.appendChild(bottom); root.appendChild(presets);
-
-    function render() {
-      const hueHex = hsvToHex(hsv.h, 1, 1);
-      sl.style.background = 'linear-gradient(to top, #000, rgba(0,0,0,0)), '
-                          + 'linear-gradient(to right, #fff, ' + hueHex + ')';
-      slHandle.style.left = (hsv.s * 100) + '%';
-      slHandle.style.top  = ((1 - hsv.v) * 100) + '%';
-      hueHandle.style.left = (hsv.h / 360 * 100) + '%';
-      const hx = hsvToHex(hsv.h, hsv.s, hsv.v);
-      sw.style.background = hx;
-      slHandle.style.background = hx;
-      if (document.activeElement !== hex) hex.value = hx;
-    }
-    function emit() { onChange(hsvToHex(hsv.h, hsv.s, hsv.v)); }
-
-    function bindDrag(el, fn) {
-      const move = e => {
-        const r  = el.getBoundingClientRect();
-        const cx = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy = e.touches ? e.touches[0].clientY : e.clientY;
-        fn(clmp((cx - r.left) / r.width, 0, 1), clmp((cy - r.top) / r.height, 0, 1));
-      };
-      el.addEventListener('pointerdown', e => {
-        move(e); e.preventDefault();
-        const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
-        window.addEventListener('pointermove', move);
-        window.addEventListener('pointerup', up);
-      });
-    }
-    bindDrag(sl,  (x, y) => { hsv.s = x; hsv.v = 1 - y; render(); emit(); });
-    bindDrag(hue, (x)    => { hsv.h = x * 360;          render(); emit(); });
-
-    hex.addEventListener('input', () => {
-      if (hexToRgb(hex.value)) { hsv = hexToHsv(hex.value); render(); emit(); }
-    });
-
-    render();
-    return { el: root, set(hx) { hsv = hexToHsv(hx); render(); } };
-  }
-
   function buildTweakPanel(cfg, replayBoot) {
-    if (document.getElementById('curie-tweaks')) return;
+    if (document.getElementById('curie-drawer')) return;
     injectTweakStyles();
 
-    function persist() {
-      try { localStorage.setItem('curieAnimCfg', JSON.stringify(cfg)); } catch (e) {}
-    }
-
+    const persist = () => { try { localStorage.setItem('curieAnimCfg', JSON.stringify(cfg)); } catch (e) {} };
     const SCHEMA = window.CURIE_ANIM_SCHEMA || {};
-    const FIELDS = [
-      { group: 'BOOT · TIMELINE', desc: 'The load-in sequence, in play order' },
-      { k: 'bootDurationMs',  label: 'Spark climb time',     step: 50,    unit: 'ms', help: 'How long the comet takes to rise up the rail toward the core.' },
-      { k: 'bootArriveFrac',  label: 'Hand-off point',       step: 0.01,              help: 'Fraction of the climb where the comet reaches the connector and hands off. Kept below 1 so it always arrives.' },
-      { k: 'bootIngressMs',   label: 'Rail → core sweep',    step: 20,    unit: 'ms', help: 'Time the energy takes to travel along the connector INTO the core before it ignites.' },
-      { k: 'bootFillMs',      label: 'Core fill-in time',    step: 20,    unit: 'ms', help: 'How long the glow takes to sweep into the core, easing to a clean stop. Shared by hover. Lower = snappier.' },
-      { k: 'coreFullFrac',    label: 'Arm point',            step: 0.02,              help: 'Fraction of the fill at which the core counts as “full” and the hold begins. Lower trims the slow tail; 1 = wait for the whole fill.' },
-      { k: 'bootHoldMs',      label: 'Core lit hold',        step: 50,    unit: 'ms', help: 'How long the core stays fully lit before it starts to un-light.' },
 
-      { group: 'BOOT · UN-LIGHT', desc: 'Staged outro: rail recedes, then branches, then the core fades' },
-      { k: 'bootRailOutMs',   label: 'Rail recede',          step: 20,    unit: 'ms', help: 'Stage 1: how long the vertical rail glow takes to recede. Scales with how lit it was.' },
-      { k: 'bootEgressMs',    label: 'Branches drain',       step: 20,    unit: 'ms', help: 'Stage 2: how fast the branches off the core drain back in. Starts only once the rail has receded.' },
-      { k: 'bootConnOutMs',   label: 'Core link drain',      step: 20,    unit: 'ms', help: 'Stage 2: how fast the core↔rail connector drains. The core is released to fade only once this lands.' },
-      { k: 'bootRetractEase', label: 'Core fade speed',      step: 0.005,             help: 'Stage 3: how fast the core itself fades once the drain reaches it. Governs both boot and hover outros. Higher = snappier.' },
-
-      { group: 'BOOT · SPARK', desc: 'The comet that climbs the rail' },
-      { k: 'bootCometTail',   label: 'Trail length',         step: 5,     unit: 'px', help: 'Length of the comet’s glowing tail.' },
-      { k: 'bootCometWidth',  label: 'Trail width',          step: 0.5,   unit: 'px', help: 'Thickness of the comet’s trail.' },
-      { k: 'bootCometHead',   label: 'Head size',            step: 0.2,   unit: 'px', help: 'Radius of the bright comet head.' },
-
-      { group: 'PULSE', desc: 'Vertical burst fired along the rail (boot + hover)' },
-      { k: 'bootBurstMs',     label: 'Pulse travel time',    step: 20,    unit: 'ms', help: 'How long the pulse fronts take to run from the core to the rail edges.' },
-      { k: 'bootBurstFadeIn', label: 'Pulse fade-in',        step: 0.02,              help: 'Fraction of the pulse over which the sparks well up out of the core. Kept above 0 so they never pop in broken.' },
-      { k: 'bootBurstReach',  label: 'Pulse trail length',   step: 5,     unit: 'px', help: 'Length of each pulse spark’s trail.' },
-      { k: 'bootBurstHead',   label: 'Pulse head size',      step: 0.2,   unit: 'px', help: 'Radius of the pulse spark heads.' },
-      { k: 'railSparkTrail',  label: 'Glow follows spark',   step: 0.05,              help: 'How the rail glow trails the pulse: <1 hugs the spark, >1 a longer after-image. Must stay above 0.' },
-
-      { group: 'RAIL GLOW', desc: 'Vertical glow on the main rail' },
-      { k: 'railGlow',        label: 'Rail glow',            toggle: true,            help: 'Master switch for the vertical rail glow.' },
-      { k: 'railGlowReach',   label: 'Glow length',          step: 4,     unit: 'px', help: 'How far the rail glow reaches above and below the core.' },
-      { k: 'railFillMs',      label: 'Glow grow time',       step: 20,    unit: 'ms', help: 'How long the rail glow takes to expand, easing to a clean stop. Shared by boot + hover.' },
-
-      { group: 'HOVER · CORE', desc: 'Live response when the cursor nears the chip' },
-      { k: 'hoverRadius',     label: 'Wake distance',        step: 4,     unit: 'px', help: 'How close the cursor must get to wake and light the core.' },
-      { k: 'highlightReach',  label: 'Glow radius',          step: 4,     unit: 'px', help: 'How far the core glow and branches reach out. Anchors the geometry, so it is never allowed to hit 0.' },
-      { k: 'branchDone',      label: 'Branch finish point',  step: 0.01,              help: 'How early into the glow the branch traces finish drawing. Kept strictly between 0 and 1 (it drives two divisions).' },
-      { k: 'coreSize',        label: 'Chip size',            step: 1,     unit: 'px', help: 'Half-size of the CPU chip body.' },
-      { k: 'retractEase',     label: 'Rail fade speed',      step: 0.005,             help: 'Eases the rail glow’s growth fallback and residual settle. Kept 1:1 with the core fade by default. Higher = snappier.' },
-
-      { group: 'SECTION NODES', desc: 'Pads that light on scroll / hover' },
-      { k: 'nodeRailEase',    label: 'Rail-tick speed',      step: 0.01,              help: 'How fast the little rail mark snaps in (leads the colour).' },
-      { k: 'nodeColEase',     label: 'Pad fill speed',       step: 0.01,              help: 'How fast colour fills the node pad behind it (follows the rail).' },
-      { k: 'nodeRailLen',     label: 'Rail-tick length',     step: 1,     unit: 'px', help: 'Half-length of the vertical tick that straddles the active node.' },
-
-      { group: 'MOTION & FEEL', desc: 'Cursor follow and parallax drift' },
-      { k: 'mouseEase',       label: 'Cursor smoothing',     step: 0.01,              help: 'Lower = the glow lags further behind the cursor.' },
-      { k: 'parallaxAmt',     label: 'Parallax strength',    step: 0.001,             help: 'How much the board drifts with the cursor (0 = locked).' },
-      { k: 'parallaxEase',    label: 'Parallax smoothing',   step: 0.005,             help: 'How smoothly the board eases toward its parallax target.' },
-
-      { group: 'LAYOUT', desc: 'Horizontal placement of core and rail' },
-      { k: 'coreOffsetX',     label: 'Core X offset',        step: 4,     unit: 'px', help: 'Shifts the CPU chip left / right.' },
-      { k: 'railOffsetX',     label: 'Rail X offset',        step: 4,     unit: 'px', help: 'Shifts the main vertical rail left / right.' },
-
-      { group: 'APPEARANCE', desc: 'Brand accent colour' },
-      { k: 'accent',          label: 'Accent color',         color: true, def: '#5b8cff', apply: 'accent', help: 'Recolours the whole site and the canvas live.' },
+    /* one control per LIVE schema key (circuit.js CURIE_ANIM_SCHEMA) + accent */
+    const SECTIONS = [
+      { id: 'boot', label: 'boot', title: 'boot sequence', boot: true,
+        desc: 'The one-time load-in, in play order. Edits here replay the boot so you can watch them land.',
+        fields: [
+          { k: 'bootDurationMs', label: 'spark climb',       step: 50,   unit: 'ms', help: 'Time for the comet to rise up the rail toward the core.' },
+          { k: 'bootArriveFrac', label: 'hand-off point',    step: 0.01,             help: 'Fraction of the climb where the comet reaches the core and hands off.' },
+          { k: 'bootIngressMs',  label: 'rail to core sweep', step: 20,  unit: 'ms', help: 'Time the energy travels into the core before it ignites.' },
+          { k: 'bootFillMs',     label: 'core fill',         step: 20,   unit: 'ms', help: 'How long the glow takes to sweep into the core.' },
+          { k: 'coreFullFrac',   label: 'arm point',         step: 0.02,             help: 'Fraction of the fill at which the core counts as fully lit and the hold begins.' },
+          { k: 'bootHoldMs',     label: 'lit hold',          step: 50,   unit: 'ms', help: 'How long the core stays fully lit before it settles back down.' },
+          { k: 'settleMs',       label: 'settle',            step: 20,   unit: 'ms', help: 'How long the core eases back to rest after the hold, ending the boot.' },
+        ] },
+      { id: 'hover', label: 'hover', title: 'hover',
+        desc: 'How the board reacts to your cursor. Tune it live with the chip behind this window.',
+        fields: [
+          { k: 'hoverRadius', label: 'wake distance',  step: 4,     unit: 'px', help: 'How close the cursor must get to wake and light the core.' },
+          { k: 'hoverEase',   label: 'wake speed',     step: 0.01,              help: 'How fast the core lights up as the cursor nears. Higher is snappier.' },
+          { k: 'retractEase', label: 'fade-out speed', step: 0.005,             help: 'How fast the glow fades once the cursor leaves. Higher is snappier.' },
+          { k: 'rippleMs',    label: 'ripple period',  step: 50,    unit: 'ms', help: 'Interval between the ripple rings that pulse out of the core while hovered.' },
+        ] },
+      { id: 'idle', label: 'idle', title: 'idle motion',
+        desc: 'The ambient life of the board when nothing is happening.',
+        fields: [
+          { k: 'idlePulseMs',  label: 'breathing period', step: 100, unit: 'ms', help: 'Cycle time of the slow rail breathing pulse.' },
+          { k: 'idlePacketMs', label: 'packet interval',  step: 100, unit: 'ms', help: 'Average gap between data packets that travel the branches.' },
+          { k: 'scannerRps',   label: 'scanner speed',    step: 0.01, unit: '/s', help: 'Rotations per second of the sweeping scanner arc.' },
+        ] },
+      { id: 'layout', label: 'layout', title: 'chip & layout',
+        desc: 'Size and placement of the chip and rail.',
+        fields: [
+          { k: 'coreSize',    label: 'chip size',     step: 1, unit: 'px', help: 'Half-size of the CPU chip body.' },
+          { k: 'coreOffsetX', label: 'chip x offset', step: 4, unit: 'px', help: 'Shifts the chip left / right.' },
+          { k: 'railOffsetX', label: 'rail x offset', step: 4, unit: 'px', help: 'Shifts the vertical rail left / right.' },
+        ] },
+      { id: 'theme', label: 'theme', title: 'theme',
+        desc: 'Brand accent, applied live across the whole site.',
+        fields: [
+          { k: 'accent', color: true, def: '#5b8cff', help: 'Recolours the site, chip and rail instantly. Pick a preset or dial in your own.' },
+        ] },
     ];
 
     (function checkPanelSync() {
-      const panelKeys = FIELDS.filter(f => f.k).map(f => f.k);
-      Object.keys(SCHEMA).forEach(k => {
-        if (panelKeys.indexOf(k) < 0) console.warn('[tweaks] schema key has no panel control:', k);
-      });
-      panelKeys.forEach(k => {
-        if (k !== 'accent' && !SCHEMA[k]) console.warn('[tweaks] panel key missing from schema:', k);
-      });
+      const keys = [];
+      SECTIONS.forEach(s2 => s2.fields.forEach(f => keys.push(f.k)));
+      Object.keys(SCHEMA).forEach(k => { if (keys.indexOf(k) < 0) console.warn('[tweaks] schema key has no control:', k); });
+      keys.forEach(k => { if (k !== 'accent' && !SCHEMA[k]) console.warn('[tweaks] control key missing from schema:', k); });
     })();
-
-    const drawer = document.createElement('div');
-    drawer.id = 'curie-drawer';
-    drawer.style.cssText = [
-      'position: fixed; top: calc(var(--nav-height, 60px) + 10px); right: 14px; z-index: 1000;',
-      'display: none; background: #101116; border: 1px solid #2a2b34; border-radius: 12px;',
-      'padding: 18px 18px 20px; width: 612px; max-width: calc(100vw - 28px); max-height: 82vh; overflow-y: auto;',
-      'box-shadow: 0 20px 60px -20px rgba(0,0,0,0.8);',
-      'color: #c3c5cd; font-family: var(--font); font-size: 12px;',
-    ].join('');
-
-    const GROUP_TABS = {
-      'BOOT · TIMELINE': 'Boot', 'BOOT · UN-LIGHT': 'Boot', 'BOOT · SPARK': 'Boot',
-      'PULSE': 'Pulse', 'RAIL GLOW': 'Pulse',
-      'HOVER · CORE': 'Hover',
-      'SECTION NODES': 'Nodes',
-      'MOTION & FEEL': 'Motion',
-      'LAYOUT': 'Layout', 'APPEARANCE': 'Layout',
-    };
-
-    const title = document.createElement('div');
-    title.style.cssText = 'display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 4px;';
-    const titleT = document.createElement('div');
-    titleT.style.cssText = 'font-size:13px; font-weight:600; color:#e6e7ec; letter-spacing:0.01em;';
-    titleT.textContent = 'Settings';
-    const titleS = document.createElement('div');
-    titleS.style.cssText = 'font-size:10px; color:#5b5d68;';
-    titleS.textContent = 'live · saved locally';
-    title.appendChild(titleT); title.appendChild(titleS);
-    drawer.appendChild(title);
 
     const clampNum = (v, sc) => {
       v = +v;
@@ -936,236 +943,407 @@
       return v < sc.min ? sc.min : v > sc.max ? sc.max : v;
     };
 
-    const rangeHint = (sc, unit) => 'safe ' + sc.min + '–' + sc.max + (unit || '');
+    /* ── window shell ── */
+    const drawer = document.createElement('div');
+    drawer.id = 'curie-drawer';
 
-    const tabBar = document.createElement('div');
-    tabBar.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 14px;';
-    drawer.appendChild(tabBar);
+    const bar = document.createElement('div'); bar.className = 'st-titlebar';
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button'; closeBtn.className = 'st-close';
+    closeBtn.setAttribute('aria-label', 'Close settings');
+    const closeGlyph = document.createElement('span'); closeGlyph.textContent = '×';
+    closeBtn.appendChild(closeGlyph);
+    const winTitle = document.createElement('div'); winTitle.className = 'st-title';
+    const tDim = document.createElement('span'); tDim.textContent = '~/';
+    const tB = document.createElement('b'); tB.textContent = 'board.cfg';
+    winTitle.appendChild(tDim); winTitle.appendChild(tB);
+    const statusBox = document.createElement('div'); statusBox.className = 'st-status';
+    bar.appendChild(closeBtn); bar.appendChild(winTitle); bar.appendChild(statusBox);
+    drawer.appendChild(bar);
 
-    const panesWrap = document.createElement('div');
-    drawer.appendChild(panesWrap);
-
-    const tabOrder = [];
-    const paneOf   = {};
-    const tabCount = {};
-    function paneFor(tab) {
-      if (!paneOf[tab]) {
-        const pane = document.createElement('div');
-        pane.style.display = 'none';
-        paneOf[tab] = pane;
-        tabCount[tab] = 0;
-        tabOrder.push(tab);
-        panesWrap.appendChild(pane);
-      }
-      return paneOf[tab];
+    let statusTimer = null;
+    function setStatus(msg, hold) {
+      statusBox.textContent = msg;
+      statusBox.classList.add('show');
+      if (statusTimer) clearTimeout(statusTimer);
+      statusTimer = null;
+      if (!hold) statusTimer = setTimeout(() => { statusBox.classList.remove('show'); statusTimer = null; }, 1500);
     }
 
-    const REPLAY_DELAY_MS = 5000;
+    /* ── body: rail nav + pane + status bar ── */
+    const body = document.createElement('div'); body.className = 'st-body';
+    const navCol = document.createElement('div'); navCol.className = 'st-nav';
+    const main = document.createElement('div'); main.className = 'st-main';
+
+    const info = document.createElement('div'); info.className = 'st-info';
+    const infoTxt = document.createElement('span');
+    const infoRange = document.createElement('span'); infoRange.className = 'st-info-range';
+    info.appendChild(infoTxt); info.appendChild(infoRange);
+
+    let activeSection = SECTIONS[0];
+    function setInfo(txt, range) { infoTxt.textContent = txt; infoRange.textContent = range || ''; }
+    function resetInfo() { setInfo(activeSection.desc, ''); }
+
     let replayTimer = null;
     function scheduleBootReplay() {
       if (!replayBoot) return;
       if (replayTimer) clearTimeout(replayTimer);
-      if (titleS) { titleS.textContent = '↻ boot replay queued…'; titleS.style.color = 'var(--lilac, #9d86ff)'; }
-      replayTimer = setTimeout(() => {
-        replayTimer = null;
-        replayBoot();
-        if (titleS) { titleS.textContent = '↻ boot replayed'; titleS.style.color = 'var(--lilac, #9d86ff)'; }
-        setTimeout(() => { if (!replayTimer && titleS) { titleS.textContent = 'live · saved locally'; titleS.style.color = '#5b5d68'; } }, 1400);
-      }, REPLAY_DELAY_MS);
+      setStatus('replay queued…', true);
+      replayTimer = setTimeout(() => { replayTimer = null; replayBoot(); setStatus('boot replayed'); }, 900);
     }
 
-    let currentPane = null;
-    let currentTab  = null;
-
-    FIELDS.forEach(f => {
-      if (f.group) {
-        const tab = GROUP_TABS[f.group] || 'Misc';
-        currentTab  = tab;
-        currentPane = paneFor(tab);
-        const wrap = document.createElement('div');
-
-        wrap.style.cssText = tabCount[tab]++ === 0
-          ? 'margin: 2px 0 12px;'
-          : 'margin: 24px 0 12px; padding-top: 16px; border-top: 1px solid #1b1c22;';
-        const g = document.createElement('div');
-        g.style.cssText = 'color: var(--lilac, #9d86ff); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;';
-        g.textContent = f.group;
-        wrap.appendChild(g);
-        if (f.desc) {
-          const d = document.createElement('div');
-          d.style.cssText = 'color: #6f7180; font-size: 10.5px; margin-top: 3px; line-height: 1.4;';
-          d.textContent = f.desc;
-          wrap.appendChild(d);
-        }
-        currentPane.appendChild(wrap);
-        return;
-      }
-
+    function buildNumRow(sec, f) {
       const sc = SCHEMA[f.k];
-      const def = sc && sc.def !== undefined ? sc.def : f.def;
-      const isBoot = currentTab === 'Boot';
+      const row = document.createElement('div'); row.className = 'st-row';
+      if (!sc) return row;
+      const head = document.createElement('div'); head.className = 'st-row-head';
+      const lbl = document.createElement('span'); lbl.className = 'st-lbl'; lbl.textContent = f.label;
+      const val = document.createElement('span'); val.className = 'st-val';
+      head.appendChild(lbl); head.appendChild(val);
+      row.appendChild(head);
 
-      const block = document.createElement('div');
-      block.style.cssText = 'margin: 0 0 16px;';
+      const cur = clampNum(cfg[f.k] !== undefined ? cfg[f.k] : sc.def, sc);
+      val.textContent = cur + (f.unit || '');
 
-      const head = document.createElement('div');
-      head.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;';
-      const lbl = document.createElement('label');
-      lbl.style.cssText = 'font-size: 12px; color: #c9cbd3; font-weight: 500;';
-      lbl.textContent = f.label;
-      head.appendChild(lbl);
-      block.appendChild(head);
-
-      let after = null;
-
-      function runApply(v) {
-        if (f.apply === 'accent') applyAccent(v);
-      }
-
-      if (f.color) {
-        const cur = cfg[f.k] !== undefined ? cfg[f.k] : def;
-        const swatch = document.createElement('button');
-        swatch.type = 'button';
-        swatch.style.cssText = 'width: 46px; height: 24px; padding: 0; border: 1px solid #2a2b34; '
-          + 'border-radius: 6px; cursor: pointer; background: ' + String(cur) + ';';
-        const picker = createColorPicker(String(cur), (hex) => {
-          cfg[f.k] = hex; persist(); runApply(hex); swatch.style.background = hex;
-        });
-        picker.el.style.display = 'none';
-        swatch.addEventListener('click', () => {
-          picker.el.style.display = picker.el.style.display === 'none' ? 'flex' : 'none';
-        });
-        head.appendChild(swatch);
-        after = picker.el;
-      } else if (f.toggle) {
-        const cur = cfg[f.k] !== undefined ? !!cfg[f.k] : !!def;
-        const chk = document.createElement('input');
-        chk.type    = 'checkbox';
-        chk.className = 'cp-check';
-        chk.checked = cur;
-        chk.addEventListener('change', () => {
-          cfg[f.k] = chk.checked;
-          persist();
-          runApply(chk.checked);
-          if (isBoot) scheduleBootReplay();
-        });
-        head.appendChild(chk);
-      } else {
-        const cur = clampNum(cfg[f.k] !== undefined ? cfg[f.k] : def, sc);
-
-        const val = document.createElement('span');
-        val.style.cssText = 'color: var(--lilac, #9d86ff); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 600;';
-        val.textContent   = cur + (f.unit || '');
-        head.appendChild(val);
-
-        const inp = document.createElement('input');
-        inp.type  = 'range';
-        inp.className = 'cp-range';
-        inp.style.width = '100%';
-        inp.min   = String(sc.min);
-        inp.max   = String(sc.max);
-        inp.step  = String(f.step);
-        inp.value = String(cur);
-
-        const setFill = () => {
-          const pct = ((parseFloat(inp.value) - sc.min) / (sc.max - sc.min)) * 100;
-          inp.style.setProperty('--fill', pct + '%');
-        };
+      const inp = document.createElement('input');
+      inp.type = 'range'; inp.className = 'st-range';
+      inp.min = String(sc.min); inp.max = String(sc.max);
+      inp.step = String(f.step); inp.value = String(cur);
+      const setFill = () => {
+        const pct = ((parseFloat(inp.value) - sc.min) / (sc.max - sc.min)) * 100;
+        inp.style.setProperty('--fill', pct + '%');
+      };
+      setFill();
+      inp.addEventListener('input', () => {
+        const v = f.step < 1 ? parseFloat(inp.value) : parseInt(inp.value, 10);
+        cfg[f.k] = v;
+        val.textContent = v + (f.unit || '');
         setFill();
+        persist();
+      });
+      if (sec.boot) inp.addEventListener('change', scheduleBootReplay);
+      row.appendChild(inp);
 
-        inp.addEventListener('input', () => {
-          const v = f.step < 1 ? parseFloat(inp.value) : parseInt(inp.value);
-          cfg[f.k] = v;
-          val.textContent = v + (f.unit || '');
-          setFill();
-          persist();
-          runApply(v);
-          if (isBoot) scheduleBootReplay();
+      const hint = 'safe ' + sc.min + '–' + sc.max + (f.unit || '');
+      row.addEventListener('mouseenter', () => setInfo(f.help, hint));
+      row.addEventListener('mouseleave', resetInfo);
+      inp.addEventListener('focus', () => setInfo(f.help, hint));
+      inp.addEventListener('blur', resetInfo);
+      return row;
+    }
+
+    function buildAccentRow(f) {
+      const row = document.createElement('div'); row.className = 'st-row';
+      row.addEventListener('mouseenter', () => setInfo(f.help, ''));
+      row.addEventListener('mouseleave', resetInfo);
+
+      let hsv = hexToHsv(String(cfg.accent !== undefined ? cfg.accent : f.def));
+      const clmp = (n, lo, hi) => (n < lo ? lo : n > hi ? hi : n);
+
+      const swWrap = document.createElement('div'); swWrap.className = 'st-swatches';
+      const PRESETS = ['#5b8cff', '#7e88ff', '#7c5cff', '#b15cf0', '#e0568f',
+                       '#f0726b', '#e0b341', '#3ecf8e', '#3fb6c9', '#9aa0ad'];
+      const swBtns = [];
+      PRESETS.forEach(c => {
+        const p = document.createElement('button');
+        p.type = 'button'; p.className = 'st-swatch'; p.style.background = c; p.title = c;
+        p.addEventListener('click', () => { hsv = hexToHsv(c); paint(); apply(); });
+        swBtns.push(p); swWrap.appendChild(p);
+      });
+
+      const sv = document.createElement('div'); sv.className = 'st-sv';
+      const svH = document.createElement('div'); svH.className = 'st-sv-h'; sv.appendChild(svH);
+      const hue = document.createElement('div'); hue.className = 'st-hue';
+      const hueH = document.createElement('div'); hueH.className = 'st-hue-h'; hue.appendChild(hueH);
+      const hexRow = document.createElement('div'); hexRow.className = 'st-hexrow';
+      const curSw = document.createElement('div'); curSw.className = 'st-cur';
+      const hexIn = document.createElement('input');
+      hexIn.className = 'st-hex'; hexIn.type = 'text'; hexIn.spellcheck = false; hexIn.maxLength = 7;
+      hexRow.appendChild(curSw); hexRow.appendChild(hexIn);
+
+      const currentHex = () => hsvToHex(hsv.h, hsv.s, hsv.v);
+      function paint() {
+        const hx = currentHex();
+        sv.style.background = 'linear-gradient(to top, #000, rgba(0,0,0,0)), '
+          + 'linear-gradient(to right, #fff, ' + hsvToHex(hsv.h, 1, 1) + ')';
+        svH.style.left = (hsv.s * 100) + '%';
+        svH.style.top = ((1 - hsv.v) * 100) + '%';
+        svH.style.background = hx;
+        hueH.style.left = (hsv.h / 360 * 100) + '%';
+        curSw.style.background = hx;
+        if (document.activeElement !== hexIn) hexIn.value = hx;
+        swBtns.forEach((b2, i) => b2.classList.toggle('on', PRESETS[i].toLowerCase() === hx.toLowerCase()));
+      }
+      function apply() {
+        const hx = currentHex();
+        cfg.accent = hx; persist(); applyAccent(hx);
+      }
+      function bindDrag(el, fn) {
+        const move = e => {
+          const r = el.getBoundingClientRect();
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          const cy = e.touches ? e.touches[0].clientY : e.clientY;
+          fn(clmp((cx - r.left) / r.width, 0, 1), clmp((cy - r.top) / r.height, 0, 1));
+        };
+        el.addEventListener('pointerdown', e => {
+          move(e); e.preventDefault();
+          const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+          window.addEventListener('pointermove', move);
+          window.addEventListener('pointerup', up);
         });
-        block.appendChild(inp);
       }
+      bindDrag(sv, (x, y) => { hsv.s = x; hsv.v = 1 - y; paint(); apply(); });
+      bindDrag(hue, x => { hsv.h = x * 360; paint(); apply(); });
+      hexIn.addEventListener('input', () => {
+        if (hexToRgb(hexIn.value)) { hsv = hexToHsv(hexIn.value); paint(); apply(); }
+      });
 
-      if (f.help || sc) {
-        const cap = document.createElement('div');
-        cap.style.cssText = 'font-size: 10.5px; color: #6f7180; margin-top: 6px; line-height: 1.45; display: flex; justify-content: space-between; gap: 12px;';
-        const txt = document.createElement('span');
-        txt.textContent = f.help || '';
-        cap.appendChild(txt);
-        if (sc && typeof sc.min === 'number') {
-          const hint = document.createElement('span');
-          hint.style.cssText = 'color: #4f515b; white-space: nowrap; flex: none;';
-          hint.textContent = rangeHint(sc, f.unit);
-          cap.appendChild(hint);
-        }
-        block.appendChild(cap);
-      }
+      paint();
+      row.appendChild(swWrap); row.appendChild(sv); row.appendChild(hue); row.appendChild(hexRow);
+      return row;
+    }
 
-      if (after) block.appendChild(after);
-      (currentPane || drawer).appendChild(block);
+    /* ── sections → nav buttons + panes ── */
+    const navBtns = {}; const panes = {};
+    SECTIONS.forEach(sec => {
+      const pane = document.createElement('div'); pane.className = 'st-pane';
+      pane.style.display = 'none';
+      const h = document.createElement('div'); h.className = 'st-sec'; h.textContent = '// ' + sec.title;
+      pane.appendChild(h);
+      sec.fields.forEach(f => pane.appendChild(f.color ? buildAccentRow(f) : buildNumRow(sec, f)));
+      panes[sec.id] = pane;
+      main.appendChild(pane);
+
+      const nb = document.createElement('button');
+      nb.type = 'button'; nb.className = 'st-nav-btn';
+      const pad = document.createElement('span'); pad.className = 'st-pad';
+      const nl = document.createElement('span'); nl.textContent = sec.label;
+      nb.appendChild(pad); nb.appendChild(nl);
+      nb.addEventListener('click', () => selectSection(sec.id));
+      navBtns[sec.id] = nb;
+      navCol.appendChild(nb);
     });
+    main.appendChild(info);
 
-    const tabBtns = {};
-    function selectTab(tab) {
-      tabOrder.forEach(t => {
-        const active = t === tab;
-        if (paneOf[t]) paneOf[t].style.display = active ? 'block' : 'none';
-        const b = tabBtns[t];
-        if (b) {
-          b.style.background  = active ? 'rgba(var(--purple-rgb), 0.18)' : 'transparent';
-          b.style.borderColor = active ? 'rgba(var(--purple-rgb), 0.55)' : '#2a2b34';
-          b.style.color       = active ? 'var(--lilac, #9d86ff)' : '#8b8d98';
+    function selectSection(id) {
+      SECTIONS.forEach(sec => {
+        const on = sec.id === id;
+        panes[sec.id].style.display = on ? 'block' : 'none';
+        navBtns[sec.id].classList.toggle('on', on);
+        if (on) {
+          activeSection = sec;
+          const p = panes[sec.id];
+          p.classList.remove('fx'); void p.offsetWidth; p.classList.add('fx');
         }
       });
-      try { localStorage.setItem('curieSettingsTab', tab); } catch (e) {}
+      resetInfo();
+      try { localStorage.setItem('curieSettingsTab', id); } catch (e) {}
     }
-    tabOrder.forEach(tab => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = tab;
-      b.style.cssText = 'flex:none; padding:6px 12px; border:1px solid #2a2b34; border-radius:7px; '
-        + 'background:transparent; color:#8b8d98; font-family:inherit; font-size:11px; font-weight:600; '
-        + 'cursor:pointer; transition:color .12s, border-color .12s, background .12s;';
-      b.addEventListener('click', () => selectTab(tab));
-      tabBtns[tab] = b;
-      tabBar.appendChild(b);
+
+    /* rail footer: replay + reset */
+    const navFoot = document.createElement('div'); navFoot.className = 'st-nav-foot';
+    function navAct(label, help, fn) {
+      const b2 = document.createElement('button');
+      b2.type = 'button'; b2.className = 'st-nav-btn st-nav-act';
+      const sp = document.createElement('span'); sp.textContent = label;
+      b2.appendChild(sp);
+      b2.addEventListener('mouseenter', () => setInfo(help, ''));
+      b2.addEventListener('mouseleave', resetInfo);
+      b2.addEventListener('click', fn);
+      navFoot.appendChild(b2);
+    }
+    navAct('↻ replay', 'Replay the boot sequence from the top.', () => { if (replayBoot) { replayBoot(); setStatus('boot replayed'); } });
+    navAct('⧉ copy', 'Copy your current settings to the clipboard as JSON.', doCopy);
+    navAct('⟲ reset', 'Restore every setting to its default and forget saved changes.', doReset);
+    navCol.appendChild(navFoot);
+
+    body.appendChild(navCol); body.appendChild(main);
+    drawer.appendChild(body);
+
+    /* ── copy the effective config (saved values + schema/accent defaults) as JSON ── */
+    function doCopy() {
+      const out = {};
+      Object.keys(SCHEMA).forEach(k => {
+        out[k] = clampNum(cfg[k] !== undefined ? cfg[k] : SCHEMA[k].def, SCHEMA[k]);
+      });
+      out.accent = cfg.accent !== undefined ? cfg.accent : '#5b8cff';
+      const json = JSON.stringify(out, null, 2);
+      const done = () => setStatus('copied to clipboard');
+      const fallback = () => {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = json;
+          ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); ta.remove(); done();
+        } catch (e) { setStatus('copy failed'); }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(json).then(done, fallback);
+      } else fallback();
+    }
+
+    /* ── resize grip (bottom-right); size clamped and remembered ── */
+    const grip = document.createElement('div');
+    grip.className = 'st-resize';
+    grip.setAttribute('aria-label', 'Resize');
+    drawer.appendChild(grip);
+
+    function sizeLimits() {
+      return {
+        wMin: 360, wMax: Math.min(760, window.innerWidth - 12),
+        hMin: 250, hMax: Math.min(window.innerHeight - 12, 760),
+      };
+    }
+    function saveSize() {
+      try {
+        localStorage.setItem('curieSettingsSize', JSON.stringify({
+          w: drawer.offsetWidth, h: drawer.offsetHeight,
+        }));
+      } catch (e) {}
+    }
+    (function makeResizable() {
+      let rz = false, sx = 0, sy = 0, ow = 0, oh = 0;
+      grip.addEventListener('pointerdown', e => {
+        rz = true; e.preventDefault(); e.stopPropagation();
+        try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+        sx = e.clientX; sy = e.clientY;
+        ow = drawer.offsetWidth; oh = drawer.offsetHeight;
+        drawer.classList.remove('st-anim');
+        drawer.style.maxHeight = 'none';
+      });
+      grip.addEventListener('pointermove', e => {
+        if (!rz) return;
+        const L = sizeLimits();
+        const w = Math.max(L.wMin, Math.min(ow + e.clientX - sx, L.wMax));
+        const h = Math.max(L.hMin, Math.min(oh + e.clientY - sy, L.hMax));
+        drawer.style.width = w + 'px';
+        drawer.style.height = h + 'px';
+      });
+      const end = () => {
+        if (!rz) return;
+        rz = false; saveSize();
+        if (drawer.style.left) placeAt(parseInt(drawer.style.left, 10) || 0, parseInt(drawer.style.top, 10) || 0);
+      };
+      grip.addEventListener('pointerup', end);
+      grip.addEventListener('pointercancel', end);
+    })();
+    (function restoreSize() {
+      let sz = null;
+      try { sz = JSON.parse(localStorage.getItem('curieSettingsSize') || 'null'); } catch (e) {}
+      if (sz && sz.w && sz.h) {
+        const L = sizeLimits();
+        drawer.style.maxHeight = 'none';
+        drawer.style.width = Math.max(L.wMin, Math.min(sz.w, L.wMax)) + 'px';
+        drawer.style.height = Math.max(L.hMin, Math.min(sz.h, L.hMax)) + 'px';
+      }
+    })();
+
+    /* ── drag by titlebar, clamped to viewport, position remembered ── */
+    function placeAt(x, y) {
+      const w = drawer.offsetWidth;
+      x = Math.max(6, Math.min(x, window.innerWidth - w - 6));
+      y = Math.max(6, Math.min(y, window.innerHeight - 46));
+      drawer.style.left = x + 'px'; drawer.style.top = y + 'px';
+      drawer.style.right = 'auto'; drawer.style.bottom = 'auto';
+    }
+    function savePos() {
+      try {
+        localStorage.setItem('curieSettingsPos', JSON.stringify({
+          x: parseInt(drawer.style.left, 10) || 0, y: parseInt(drawer.style.top, 10) || 0,
+        }));
+      } catch (e) {}
+    }
+    (function makeDraggable() {
+      let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+      bar.addEventListener('pointerdown', e => {
+        if (e.target.closest('button')) return;
+        dragging = true;
+        try { bar.setPointerCapture(e.pointerId); } catch (err) {}
+        const r = drawer.getBoundingClientRect();
+        ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
+        drawer.classList.remove('st-anim');
+      });
+      bar.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        placeAt(ox + e.clientX - sx, oy + e.clientY - sy);
+      });
+      const end = () => { if (!dragging) return; dragging = false; savePos(); };
+      bar.addEventListener('pointerup', end);
+      bar.addEventListener('pointercancel', end);
+    })();
+    window.addEventListener('resize', () => {
+      if (drawer.style.display !== 'none' && drawer.style.left) {
+        placeAt(parseInt(drawer.style.left, 10) || 0, parseInt(drawer.style.top, 10) || 0);
+      }
     });
 
-    let startTab = tabOrder[0];
-    try { const saved = localStorage.getItem('curieSettingsTab'); if (saved && paneOf[saved]) startTab = saved; } catch (e) {}
-    if (startTab) selectTab(startTab);
+    let positioned = false;
+    function ensurePosition() {
+      if (positioned) return;
+      positioned = true;
+      let p = null;
+      try { p = JSON.parse(localStorage.getItem('curieSettingsPos') || 'null'); } catch (e) {}
+      const navEl = document.getElementById('nav');
+      const navH = navEl ? navEl.offsetHeight : 56;
+      if (p && typeof p.x === 'number' && typeof p.y === 'number') placeAt(p.x, p.y);
+      else placeAt(window.innerWidth - drawer.offsetWidth - 14, navH + 10);
+    }
 
-    const btns = document.createElement('div');
-    btns.style.cssText = 'display: flex; gap: 8px; margin-top: 12px;';
-    const reset = document.createElement('button');
-    reset.textContent = 'reset';
-    reset.style.cssText = 'flex: 1; background: #1b1c22; border: 1px solid #2a2b34; color: #c3c5cd; border-radius: 6px; padding: 6px; cursor: pointer; font-family: inherit; font-size: 11px;';
-    reset.addEventListener('click', () => {
+    /* ── open / close (gear in the nav toggles; Esc or traffic dot closes;
+       clicking the page does NOT close it, so you can tune the board live) ── */
+    let openState = false, hideTimer = null;
+    function setOpen(open, instant) {
+      openState = open;
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      if (open) {
+        drawer.style.display = 'flex';
+        ensurePosition();
+        if (instant) {
+          drawer.classList.remove('st-anim');
+          drawer.classList.add('st-open');
+        } else {
+          drawer.classList.remove('st-open', 'st-anim');
+          void drawer.offsetWidth;
+          drawer.classList.add('st-anim');
+          requestAnimationFrame(() => { if (openState) drawer.classList.add('st-open'); });
+        }
+      } else {
+        drawer.classList.add('st-anim');
+        drawer.classList.remove('st-open');
+        hideTimer = setTimeout(() => { if (!openState) drawer.style.display = 'none'; }, 230);
+      }
+      gear.style.color = open ? 'var(--lilac, #9d86ff)' : 'var(--text-muted)';
+      gear.setAttribute('aria-expanded', String(open));
+    }
+    drawer.__stOpen = setOpen;
 
+    function doReset() {
       Object.keys(cfg).forEach(k => delete cfg[k]);
       try { localStorage.removeItem('curieAnimCfg'); } catch (e) {}
       applyAccent('#5b8cff');
-
+      const left = drawer.style.left, top = drawer.style.top;
       const oldGear = document.getElementById('curie-gear');
-      const oldDrawer = document.getElementById('curie-drawer');
       if (oldGear) oldGear.remove();
-      if (oldDrawer) oldDrawer.remove();
+      drawer.remove();
       buildTweakPanel(cfg, replayBoot);
-
       const d = document.getElementById('curie-drawer');
-      if (d) d.style.display = 'block';
-    });
-    const replay = document.createElement('button');
-    replay.textContent = 'replay boot';
-    replay.style.cssText = 'flex: 1; background: rgba(var(--purple-rgb), 0.18); border: 1px solid rgba(var(--purple-rgb), 0.55); color: var(--lilac, #9d86ff); border-radius: 6px; padding: 6px; cursor: pointer; font-family: inherit; font-size: 11px;';
-    replay.addEventListener('click', () => replayBoot && replayBoot());
-    btns.appendChild(reset);
-    btns.appendChild(replay);
-    drawer.appendChild(btns);
+      if (d) {
+        if (left) { d.style.left = left; d.style.top = top; d.style.right = 'auto'; }
+        if (typeof d.__stOpen === 'function') d.__stOpen(true, true);
+      }
+    }
 
+    closeBtn.addEventListener('click', e => { e.stopPropagation(); setOpen(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && openState && drawer.isConnected) setOpen(false);
+    });
+
+    /* gear entry point in the nav (visibility gated by the terminal command) */
     const gear = document.createElement('button');
     gear.id = 'curie-gear';
-    gear.title = 'animation settings';
-    gear.setAttribute('aria-label', 'Animation settings');
+    gear.title = 'board settings';
+    gear.setAttribute('aria-label', 'Board settings');
     gear.style.cssText = [
       'background: none; border: none; border-radius: 7px;',
       'color: var(--text-muted); font-size: 13px; padding: 7px 12px; flex: none;',
@@ -1173,50 +1351,40 @@
       'font-family: var(--font); transition: color .15s, background .15s;',
     ].join('');
     gear.textContent = 'settings';
-
-    function setOpen(open) {
-      drawer.style.display = open ? 'block' : 'none';
-      gear.style.color      = open ? 'var(--lilac, #9d86ff)' : 'var(--text-muted)';
-      gear.style.background = 'none';
-      gear.setAttribute('aria-expanded', String(open));
-    }
     gear.setAttribute('aria-expanded', 'false');
-
     gear.addEventListener('click', e => {
       e.stopPropagation();
-      setOpen(drawer.style.display !== 'block');
+      const isOpen = drawer.style.display !== 'none' && drawer.classList.contains('st-open');
+      setOpen(!isOpen);
     });
     gear.addEventListener('mouseenter', () => {
-      if (drawer.style.display !== 'block') { gear.style.color = 'var(--text-bright)'; gear.style.background = 'rgba(255, 255, 255, 0.04)'; }
+      if (!openState) { gear.style.color = 'var(--text-bright)'; gear.style.background = 'rgba(255, 255, 255, 0.04)'; }
     });
     gear.addEventListener('mouseleave', () => {
-      if (drawer.style.display !== 'block') { gear.style.color = 'var(--text-muted)'; gear.style.background = 'none'; }
+      if (!openState) { gear.style.color = 'var(--text-muted)'; gear.style.background = 'none'; }
     });
 
-    drawer.addEventListener('click', e => e.stopPropagation());
-
-    document.addEventListener('click', () => {
-      if (drawer.style.display === 'block') setOpen(false);
-    });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && drawer.style.display === 'block') setOpen(false);
-    });
-
-    const navBar = document.getElementById('nav');
+    const navBarEl = document.getElementById('nav');
     const navLinks = document.getElementById('nav-links');
     if (navLinks) {
       navLinks.appendChild(gear);
-    } else if (navBar) {
-      navBar.appendChild(gear);
+    } else if (navBarEl) {
+      navBarEl.appendChild(gear);
     } else {
       gear.style.position = 'fixed'; gear.style.top = '14px'; gear.style.right = '14px'; gear.style.zIndex = '1000';
       document.body.appendChild(gear);
     }
     document.body.appendChild(drawer);
 
+    let startId = SECTIONS[0].id;
+    try {
+      const saved = localStorage.getItem('curieSettingsTab');
+      if (saved && panes[saved]) startId = saved;
+    } catch (e) {}
+    selectSection(startId);
+
     applySettingsButtonVisibility();
   }
-
   function settingsButtonShown() {
     try { return localStorage.getItem('curieSettingsButton') === '1'; } catch (e) { return false; }
   }
@@ -1266,20 +1434,81 @@
 
   let circuitSyncColors = null;
 
+  // ── hero title ↔ circuit boot sync ───────────────────────────────────
+  // The circuit owns the boot clock and feeds core-fill progress in here; the
+  // hero title mirrors it and only crystallises once the core is fully lit.
+  let titleBoot = null;   // controller returned by bootLiquidTitle()
+  let coreProgress = 0;   // latest 0→1 core-fill sample
+  let coreLit = false;    // has the core fully lit yet?
+  const bootHooks = {
+    onCoreProgress(p) {
+      coreProgress = p;
+      if (titleBoot) titleBoot.setProgress(p);
+    },
+    onCoreLit() {
+      coreLit = true;
+      if (titleBoot) titleBoot.finish();
+    },
+  };
+
+  // Fallback for circuits that don't emit boot hooks (the v1 canvas circuit, or
+  // no circuit at all): drive the same callbacks off a local clock so the title
+  // still reveals progressively and finishes on the core-lit beat.
+  let bootFeedRAF = 0;
+  function startLocalBootFeed(durationMs) {
+    if (bootFeedRAF) cancelAnimationFrame(bootFeedRAF);
+    coreProgress = 0; coreLit = false;
+    const litAt = Math.max(1, durationMs || coreLitMs());
+    const t0 = performance.now();
+    const step = (now) => {
+      const p = Math.min((now - t0) / litAt, 1);
+      bootHooks.onCoreProgress(p);
+      if (p >= 1) { bootHooks.onCoreLit(); bootFeedRAF = 0; return; }
+      bootFeedRAF = requestAnimationFrame(step);
+    };
+    bootFeedRAF = requestAnimationFrame(step);
+  }
+
+  // Mobile (≤560px) never loads the chip — the circuit board is disabled and
+  // invisible there (a static CSS trace stands in). So there's nothing to sync
+  // to: drive the title on a short local clock so it reveals quickly, and let
+  // the rotor + meta-circuit start off the same `curie:title-ready` beat.
+  const MOBILE_NO_CHIP = document.documentElement.clientWidth <= 560;
+  const MOBILE_TITLE_MS = 700;
+
   applyAccent(animCfg.accent || '#5b8cff');
 
   const canvas = document.getElementById('circuit-canvas');
   let replayBoot;
 
-  if (canvas) {
-    const circuit = initCircuit(canvas, () => animCfg, () => true);
+  if (canvas && MOBILE_NO_CHIP) {
+    // chip not loaded on mobile — fast local title reveal, no circuit engine
+    if (canvas) canvas.style.display = 'none';
+    startLocalBootFeed(MOBILE_TITLE_MS);
+    replayBoot = () => {
+      titleBoot = bootLiquidTitle();
+      startLocalBootFeed(MOBILE_TITLE_MS);
+    };
+  } else if (canvas) {
+    const circuit = initCircuit(canvas, () => animCfg, () => true, bootHooks);
     circuitSyncColors = circuit.syncColors;
     circuitSyncColors();
 
+    // v2 circuit emits boot hooks (advertised via coreLitMs); the v1 canvas
+    // circuit doesn't, so fall back to the local time-based feed there.
+    const eventDriven = typeof circuit.coreLitMs === 'function';
+    if (!eventDriven) startLocalBootFeed();
+
     replayBoot = () => {
-      circuit.replayBoot();
-      bootLiquidTitle(coreLitMs());
+      coreProgress = 0;
+      coreLit = false;
+      circuit.replayBoot();            // resets the boot clock; hooks re-fire
+      titleBoot = bootLiquidTitle();   // fresh molten title, gated on the boot
+      if (!eventDriven) startLocalBootFeed();
     };
+  } else {
+    // no circuit on the page — still let the title reveal on a local clock
+    startLocalBootFeed();
   }
 
   const termBody  = document.getElementById('term-body');
@@ -1366,6 +1595,7 @@
   initHero();
   initLogo();
   initAutoFocus();
+  initSectionFocusFallback();
   initFxGating();
 
   let tweaksBuilt = false;

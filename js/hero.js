@@ -1,3 +1,13 @@
+// One-shot "hero title fully loaded" signal. The rotor and the meta-circuit
+// animation both wait on this so they only start once the liquid title has
+// finished crystallising (core lit → glint sweep complete). Idempotent, so a
+// title replay re-firing it is harmless — consumers listen `once`.
+function signalTitleReady() {
+  if (window.__curieTitleReady) return;
+  window.__curieTitleReady = true;
+  try { document.dispatchEvent(new Event('curie:title-ready')); } catch (e) {}
+}
+
 function startRotor(rotorEl) {
   const words = PORTFOLIO.rotor;
   let w = 0, j = 0, deleting = false;
@@ -102,13 +112,14 @@ function rgbCss(rgb) {
 
 let liquidBootGen = 0;
 
-function bootLiquidTitle(revealMs) {
+function bootLiquidTitle() {
+  const NOOP = { setProgress() {}, finish() {}, cancel() {} };
   const svg = document.getElementById("hero-name-svg");
-  if (!svg) return;
+  if (!svg) { signalTitleReady(); return NOOP; }
 
   const line1Els = svg.querySelectorAll(".t-line1");
   const line2Els = svg.querySelectorAll(".t-line2");
-  if (!line1Els.length || !line2Els.length) return;
+  if (!line1Els.length || !line2Els.length) { signalTitleReady(); return NOOP; }
 
   const ink      = svg.querySelector(".t-ink");
   // Boot mutates only the inflate chain; shadow + glint layers are hidden during
@@ -166,18 +177,20 @@ function bootLiquidTitle(revealMs) {
   };
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const lowPower = (navigator.hardwareConcurrency || 8) <= 4;
   if (prefersReducedMotion) {
     settle();
-    return;
+    signalTitleReady();
+    return NOOP;
   }
 
-  const startDelay = 140;
-  const totalDur = Math.max(400, (revealMs || 650) - startDelay);
-  const sweepDur = Math.min(760, Math.round(totalDur * 0.45));
-  const settleDur = Math.max(200, totalDur - sweepDur);
-  const tickMs = 50; // 20Hz — the liquid wobble reads the same, at 2/3 the raster load
-  const t0 = performance.now();
+  // The boot is GATED on the circuit. `extProgress` (0→1) mirrors how lit the
+  // core chip is — fed in via setProgress() from the circuit boot loop — and the
+  // name only crystallises + fires its glint sweep once the core is fully lit
+  // (extProgress hits 1, or finish() is called). Until then it stays molten.
+  const sweepDur = 620;
+  const tickMs = 50;   // 20Hz molten wobble
+  let extProgress = 0;
+  let finished = false;
   let lastTick = 0;
   let sweepStart = 0;
 
@@ -255,15 +268,14 @@ function bootLiquidTitle(revealMs) {
   function frame(now) {
     if (gen !== liquidBootGen) return;
 
-    const shouldPaint = now - lastTick >= tickMs;
-
+    // Phase 1 — molten scramble, paced by the circuit's core-fill progress.
     if (!sweepStart) {
-      const t = clamp((now - t0 - startDelay) / settleDur, 0, 1);
+      const t = clamp(extProgress, 0, 1);
 
-      if (t >= 1) {
+      if (finished || t >= 1) {
         settle();
         sweepStart = now;
-      } else if (shouldPaint && t > 0) {
+      } else if (now - lastTick >= tickMs) {
         lastTick = now;
         paintSettle(t, true);
       }
@@ -272,15 +284,17 @@ function bootLiquidTitle(revealMs) {
       return;
     }
 
+    // Phase 2 — the glint sweep, fired the instant the core is fully lit.
     const t = clamp((now - sweepStart) / sweepDur, 0, 1);
 
     if (t >= 1) {
       paintSweep(1);
       lightEls.forEach((light) => light.setAttribute("z", 170));
+      signalTitleReady();
       return;
     }
 
-    if (shouldPaint) {
+    if (now - lastTick >= tickMs) {
       lastTick = now;
       paintSweep(t);
     }
@@ -289,6 +303,15 @@ function bootLiquidTitle(revealMs) {
   }
 
   requestAnimationFrame(frame);
+
+  return {
+    // circuit feeds core-fill here; monotonic so a stray lower value can't
+    // rewind the reveal mid-boot
+    setProgress(p) { if (!finished && p > extProgress) extProgress = p; },
+    // core fully lit — crystallise now regardless of the last progress sample
+    finish() { finished = true; },
+    cancel() { /* the next boot bumps liquidBootGen, which halts this rAF */ },
+  };
 }
 
 function initLiquidTitle() {

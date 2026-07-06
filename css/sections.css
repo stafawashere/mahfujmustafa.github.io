@@ -63,7 +63,7 @@
 }
 
 .section-body-content {
-   margin-top: 36px;
+   margin-top: 23px;
    opacity: 0;
    transform: translateY(-14px);
    transition: opacity .18s ease-out, transform .36s cubic-bezier(.65, 0, .35, 1);
@@ -1064,4 +1064,180 @@
       transition-duration: .01s;
       transition-delay: 0s;
    }
+}
+
+/* ═══ circuit-themed section headers (liquid-SVG titles + board-drawn trace) ═══ */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.section-header:focus-visible {
+  outline: 2px solid rgba(var(--purple-rgb), 0.55);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+
+/* ── identity ── */
+.node-id {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.node-addr {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(var(--lilac-rgb), 0.5);
+  white-space: nowrap;
+  transition: color .25s ease;
+}
+
+.node-addr em {
+  font-style: normal;
+  color: var(--text-faint);
+  letter-spacing: 0.14em;
+  transition: color .25s ease;
+}
+
+/* education: tighter header→content gap, now 50% less again */
+#education .section-body-content {
+  margin-top: 3.25px;
+}
+
+/* contact: 50% less than the 23px default */
+#contact .section-body-content {
+  margin-top: 5.75px;
+}
+
+/* skills: a further 40% tighter than 13px, then another 50% */
+#skills .section-body-content {
+  margin-top: 3.9px;
+}
+ — the SVG carries its own
+   gradient fill, so it needs no text color. Height is set relative to the
+   old 22px cap so the layout rhythm is unchanged; width follows the glyphs. */
+.node-title {
+  display: block;
+  line-height: 0;
+}
+
+.node-title {
+  display: block;
+  line-height: 0;
+  position: relative;
+}
+
+.node-title .liquid-title {
+  display: block;
+  height: 7em;
+  width: auto;
+  overflow: visible;
+  /* inactive: dimmed + desaturated, waiting for focus */
+  opacity: 0.4;
+  filter: grayscale(0.55) brightness(0.72) drop-shadow(0 2px 5px rgba(var(--purple-rgb), 0.1));
+  /* transition opacity ONLY: animating `filter` forces a full re-raster of the
+     turbulence/lighting-filtered glyphs every frame of the 0.5s ramp — a major
+     scroll-jank source since focus moves between headers while scrolling.
+     The filter states still switch (instantly), masked by the opacity fade. */
+  transition: opacity .5s ease;
+}
+.node-title { font-size: 22px; }
+
+/* focused (synced with the circuit's active node) OR hover — full life.
+   Note: is-open (content expanded) does NOT brighten the title; only the
+   scroll-focused node lights, so unfocused headers keep the inactive look. */
+.section-header.is-focused .liquid-title,
+.section-header:hover .liquid-title {
+  opacity: 1;
+  filter: grayscale(0) brightness(1) drop-shadow(0 2px 8px rgba(var(--lilac-rgb), 0.24));
+}
+
+/* shimmer overlay — a bright clone revealed through a narrow band that sweeps
+   right→left across the glyphs when the circuit packet lands on the footprint */
+.node-title .liquid-shimmer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 7em;
+  width: 100%;
+  overflow: visible;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(100deg, transparent 42%, #000 50%, transparent 58%);
+          mask-image: linear-gradient(100deg, transparent 42%, #000 50%, transparent 58%);
+  -webkit-mask-size: 260% 100%;
+          mask-size: 260% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: 150% 0;
+          mask-position: 150% 0;
+}
+.section-header.shimmer .liquid-shimmer {
+  animation: titleShimmer 0.62s ease-out;
+}
+@keyframes titleShimmer {
+  0%   { opacity: 0;    -webkit-mask-position: -50% 0;  mask-position: -50% 0; }
+  18%  { opacity: 0.95; }
+  100% { opacity: 0;    -webkit-mask-position: 150% 0;  mask-position: 150% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section-header.shimmer .liquid-shimmer { animation: none; }
+}
+
+/* ── the trace spacer — the board SVG draws the actual net through here ── */
+.node-trace {
+  flex: 1;
+  min-width: 52px;
+  height: 46px;
+  pointer-events: none;
+}
+
+/* ── responsive ── */
+@media (max-width: 680px) {
+  .section-header { gap: 15px; }
+  .node-title { font-size: 18px; }
+}
+
+/* below 561px the board SVG is disabled — draw a static fallback trace */
+@media (max-width: 560px) {
+  .node-trace {
+    position: relative;
+    min-width: 16px;
+  }
+  .node-trace::before {           /* the trace line */
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 13px;
+    top: 50%;
+    height: 1.5px;
+    margin-top: -0.75px;
+    background: rgba(var(--purple-rgb), 0.35);
+    transition: background .25s ease;
+  }
+  .node-trace::after {            /* terminal pad — ring + center via */
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 11px;
+    height: 11px;
+    margin-top: -5.5px;
+    border: 1.5px solid rgba(var(--purple-rgb), 0.5);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--purple-rgb), 0.75) 0 1.7px, transparent 2.5px);
+    transition: border-color .25s ease;
+  }
+  .section-header.is-open .node-trace::before { background: rgba(var(--lilac-rgb), 0.4); }
+  .section-header.is-open .node-trace::after  { border-color: rgba(var(--lilac-rgb), 0.65); }
 }
