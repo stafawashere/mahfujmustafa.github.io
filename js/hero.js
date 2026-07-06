@@ -109,197 +109,27 @@ function rgbCss(rgb) {
   return "rgb(" + rgb.join(",") + ")";
 }
 
-let liquidBootGen = 0;
-
+// Load animation removed. The title renders in its final settled state — the
+// full name in rest liquid filters, all layers visible — straight from the
+// markup, so there's nothing to animate. This just normalises that state (in
+// case a prior boot left it mid-flight) and fires the ready signal that the
+// rotor and meta-circuit wait on. The returned controller is inert: the
+// circuit's setProgress()/finish() calls are accepted and ignored.
 function bootLiquidTitle() {
   const NOOP = { setProgress() {}, finish() {}, cancel() {} };
   const svg = document.getElementById("hero-name-svg");
   if (!svg) { signalTitleReady(); return NOOP; }
 
-  const line1Els = svg.querySelectorAll(".t-line1");
-  const line2Els = svg.querySelectorAll(".t-line2");
-  if (!line1Els.length || !line2Els.length) { signalTitleReady(); return NOOP; }
+  svg.querySelectorAll(".t-line1").forEach((el) => { el.textContent = "Mahfuj"; });
+  svg.querySelectorAll(".t-line2").forEach((el) => { el.textContent = "Mustafa"; });
 
-  const ink      = svg.querySelector(".t-ink");
-  // Boot mutates only the inflate chain; shadow + glint layers are hidden during
-  // the scramble so each tick rasters one filter chain instead of three (F16).
-  const warpEls  = svg.querySelectorAll("#liquid-inflate feDisplacementMap");
-  const blurEls  = svg.querySelectorAll("#liquid-inflate feGaussianBlur");
-  const glintWarpEls = svg.querySelectorAll("#liquid-glint feDisplacementMap");
-  const glintBlurEls = svg.querySelectorAll("#liquid-glint feGaussianBlur");
-  const shadowLayer  = svg.querySelector('g[filter="url(#liquid-shadow)"]');
-  const glintLayer   = svg.querySelector('g[filter="url(#liquid-glint)"]');
-  const lightEls = svg.querySelectorAll(".mv-light");
+  const ink = svg.querySelector(".t-ink");
+  if (ink) ink.style.opacity = "";
+  svg.querySelectorAll('g[filter="url(#liquid-shadow)"], g[filter="url(#liquid-glint)"]')
+     .forEach((g) => { g.style.display = ""; });
 
-  const diffuseEls = svg.querySelectorAll("feDiffuseLighting");
-  const sheenEls   = svg.querySelectorAll("feSpecularLighting[result='spec2']");
-  const glintEls   = svg.querySelectorAll("feSpecularLighting[result='spec']");
-
-  const gen = ++liquidBootGen;
-
-  const glyphs = "!<>-_\\/[]{}=+*^?#$%01ABCDEFGHKXZ";
-  const F1 = "Mahfuj", F2 = "Mustafa";
-  const total = F1.length + F2.length;
-
-  const setLines = (a, b) => {
-    line1Els.forEach((el) => { el.textContent = a; });
-    line2Els.forEach((el) => { el.textContent = b; });
-  };
-
-  const setWarp = (scale, blur) => {
-    warpEls.forEach((el) => el.setAttribute("scale", scale));
-    blurEls.forEach((el) => el.setAttribute("stdDeviation", blur));
-  };
-
-  const accent = accentRgb();
-  const hotLight = {
-    diffuse: lightenRgb(accent, 0.12),
-    sheen:   lightenRgb(accent, 0.35),
-    glint:   lightenRgb(accent, 0.55)
-  };
-
-  const setLighting = (diffuse, sheen, glint) => {
-    diffuseEls.forEach((el) => el.setAttribute("lighting-color", rgbCss(diffuse)));
-    sheenEls.forEach((el) => el.setAttribute("lighting-color", rgbCss(sheen)));
-    glintEls.forEach((el) => el.setAttribute("lighting-color", rgbCss(glint)));
-  };
-
-  const settle = () => {
-    setLines(F1, F2);
-    setWarp(LIQUID_REST_WARP.scale, LIQUID_REST_WARP.blur);
-    glintWarpEls.forEach((el) => el.setAttribute("scale", LIQUID_REST_WARP.scale));
-    glintBlurEls.forEach((el) => el.setAttribute("stdDeviation", LIQUID_REST_WARP.blur));
-    setLighting(LIQUID_REST_LIGHT.diffuse, LIQUID_REST_LIGHT.sheen, LIQUID_REST_LIGHT.glint);
-    if (shadowLayer) shadowLayer.style.display = "";
-    if (glintLayer)  glintLayer.style.display = "";
-    if (ink) ink.style.opacity = "";
-  };
-
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReducedMotion) {
-    settle();
-    signalTitleReady();
-    return NOOP;
-  }
-
-  // The boot is GATED on the circuit. `extProgress` (0→1) mirrors how lit the
-  // core chip is — fed in via setProgress() from the circuit boot loop — and the
-  // name only crystallises + fires its glint sweep once the core is fully lit
-  // (extProgress hits 1, or finish() is called). Until then it keeps scrambling.
-  const sweepDur = 620;
-  const tickMs = 50;   // 20Hz scramble
-  let extProgress = 0;
-  let finished = false;
-  let lastTick = 0;
-  let sweepStart = 0;
-
-  setLines("", "");
-  setWarp(LIQUID_REST_WARP.scale, LIQUID_REST_WARP.blur);
-  setLighting(LIQUID_REST_LIGHT.diffuse, LIQUID_REST_LIGHT.sheen, LIQUID_REST_LIGHT.glint);
-  if (ink) ink.style.opacity = "0";
-
-  // Park the glint chain at rest values and skip rastering shadow + glint
-  // entirely while the scramble runs; settle() reveals them for the sweep.
-  glintWarpEls.forEach((el) => el.setAttribute("scale", LIQUID_REST_WARP.scale));
-  glintBlurEls.forEach((el) => el.setAttribute("stdDeviation", LIQUID_REST_WARP.blur));
-  if (shadowLayer) shadowLayer.style.display = "none";
-  if (glintLayer)  glintLayer.style.display = "none";
-
-  const sweepStartY = Math.round((svg.viewBox.baseVal.height || 370) * 0.35);
-  lightEls.forEach((light) => { light.setAttribute("x", -140); light.setAttribute("y", sweepStartY); });
-
-  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-
-  function paintSettle(t, scramble) {
-    if (ink) ink.style.opacity = clamp(t / 0.3, 0, 1).toFixed(3);
-
-    if (!scramble) return;
-
-    const locked = Math.floor(t * total);
-    const glitch = () => glyphs[(Math.random() * glyphs.length) | 0];
-
-    let out1, out2;
-    if (locked < F1.length) {
-      out1 = F1.slice(0, locked) + glitch();
-      out2 = "";
-    } else {
-      out1 = F1;
-      out2 = F2.slice(0, locked - F1.length);
-      if (locked < total) out2 += glitch();
-    }
-
-    setLines(out1, out2);
-  }
-
-  function paintSweep(t) {
-    const vb = svg.viewBox.baseVal;
-    const width  = vb.width  || 1480;
-    const height = vb.height || 370;
-
-    const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    const x = Math.round(-140 + (width + 280) * eased);
-    const y = Math.round(height * 0.35);
-    const heat = Math.sin(Math.PI * t);
-    const z = Math.round(170 + 70 * heat);
-
-    lightEls.forEach((light) => {
-      light.setAttribute("x", x);
-      light.setAttribute("y", y);
-      light.setAttribute("z", z);
-    });
-
-    glintEls.forEach((el) => {
-      el.setAttribute("lighting-color", rgbCss(mixRgb(LIQUID_REST_LIGHT.glint, hotLight.glint, heat)));
-    });
-  }
-
-  function frame(now) {
-    if (gen !== liquidBootGen) return;
-
-    // Phase 1 — letter scramble, paced by the circuit's core-fill progress.
-    if (!sweepStart) {
-      const t = clamp(extProgress, 0, 1);
-
-      if (finished || t >= 1) {
-        settle();
-        sweepStart = now;
-      } else if (now - lastTick >= tickMs) {
-        lastTick = now;
-        paintSettle(t, true);
-      }
-
-      requestAnimationFrame(frame);
-      return;
-    }
-
-    // Phase 2 — the glint sweep, fired the instant the core is fully lit.
-    const t = clamp((now - sweepStart) / sweepDur, 0, 1);
-
-    if (t >= 1) {
-      paintSweep(1);
-      lightEls.forEach((light) => light.setAttribute("z", 170));
-      signalTitleReady();
-      return;
-    }
-
-    if (now - lastTick >= tickMs) {
-      lastTick = now;
-      paintSweep(t);
-    }
-
-    requestAnimationFrame(frame);
-  }
-
-  requestAnimationFrame(frame);
-
-  return {
-    // circuit feeds core-fill here; monotonic so a stray lower value can't
-    // rewind the reveal mid-boot
-    setProgress(p) { if (!finished && p > extProgress) extProgress = p; },
-    // core fully lit — crystallise now regardless of the last progress sample
-    finish() { finished = true; },
-    cancel() { /* the next boot bumps liquidBootGen, which halts this rAF */ },
-  };
+  signalTitleReady();
+  return NOOP;
 }
 
 function initLiquidTitle() {

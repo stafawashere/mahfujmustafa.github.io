@@ -1,0 +1,112 @@
+##### SUSPECT=baseline THROTTLE=4
+run 0: ticks=35 tickΔ med=56.1 p95=92.5 max=384.8 dropped(Δ>85ms)=3 refits@=475,479,659 fontsReady=307 firstTick=94 titleReady=2927 sweepWrites=13 rafΔ med=7.0 p95=14.6
+run 1: ticks=36 tickΔ med=55.6 p95=113.4 max=236.9 dropped(Δ>85ms)=2 refits@=279,348,430 fontsReady=424 firstTick=44 titleReady=2791 sweepWrites=13 rafΔ med=7.0 p95=14.5
+run 2: ticks=38 tickΔ med=55.8 p95=63.2 max=177.5 dropped(Δ>85ms)=1 refits@=212,278,352 fontsReady=346 firstTick=37 titleReady=2731 sweepWrites=13 rafΔ med=7.0 p95=14.6
+run 3: ticks=35 tickΔ med=56.2 p95=138.7 max=205.7 dropped(Δ>85ms)=3 refits@=254,323,401 fontsReady=394 firstTick=51 titleReady=2782 sweepWrites=13 rafΔ med=7.0 p95=14.6
+run 4: ticks=38 tickΔ med=56.0 p95=67.6 max=185.0 dropped(Δ>85ms)=1 refits@=219,282,361 fontsReady=355 firstTick=37 titleReady=2739 sweepWrites=13 rafΔ med=7.0 p95=14.2
+=== baseline @4x (5 cold loads) ===
+tickΔ  med=55.9ms p95=92.5ms  dropped=10/177
+sweepΔ med=55.6ms p95=1916.8ms  worst=1929.6ms
+FunctionCall         total 765.9ms n=1917 worst 52.6ms
+GPUTask              total 700.0ms n=610 worst 26.4ms
+UpdateLayoutTree     total 450.4ms n=548 worst 44.8ms
+RasterTask           total 306.6ms n=825 worst 39.7ms
+Paint                total 251.1ms n=297 worst 8.6ms
+Layout               total 181.1ms n=322 worst 38.1ms
+task 103.7ms @+168ms: ThreadControllerImpl::RunTask 103.6ms | UpdateLayoutTree 44.8ms | Layout 38.1ms | PrePaint 8.2ms
+task 93.5ms @+496ms: ThreadControllerImpl::RunTask 93.5ms | FireAnimationFrame 55.0ms | FunctionCall 52.6ms step | FireAnimationFrame 11.7ms
+task 34.7ms @+3033ms: ThreadControllerImpl::RunTask 34.7ms | RunTask 2.4ms | ThreadControllerImpl::RunTask 2.4ms | GPUTask 2.4ms
+task 33.4ms @+2959ms: ThreadControllerImpl::RunTask 33.4ms | FireAnimationFrame 16.8ms | FunctionCall 16.8ms | Layout 13.6ms
+task 29.1ms @+1119ms: ThreadControllerImpl::RunTask 29.1ms | EventDispatch 15.0ms | FunctionCall 14.2ms | UpdateLayoutTree 13.5ms
+task 26.4ms @+619ms: ThreadControllerImpl::RunTask 26.4ms | GPUTask 26.4ms | ThreadPool_RunTask 7.2ms | DawnPlatformImpl::RunWorkerTask 7.2ms
+##### SUSPECT=nofilter THROTTLE=4
+run 0: ticks=37 tickΔ med=56.5 p95=124.8 max=276.4 dropped(Δ>85ms)=2 refits@=316,455,478 fontsReady=472 firstTick=42 titleReady=2840 sweepWrites=13 rafΔ med=7.0 p95=14.5
+run 1: ticks=37 tickΔ med=55.2 p95=76.9 max=189.6 dropped(Δ>85ms)=1 refits@=227,298,378 fontsReady=371 firstTick=40 titleReady=2743 sweepWrites=13 rafΔ med=7.0 p95=14.1
+run 2: ticks=38 tickΔ med=55.3 p95=64.5 max=168.1 dropped(Δ>85ms)=1 refits@=205,272,346 fontsReady=341 firstTick=39 titleReady=2730 sweepWrites=13 rafΔ med=7.0 p95=14.1
+=== nofilter @4x (3 cold loads) ===
+tickΔ  med=55.6ms p95=76.2ms  dropped=4/109
+sweepΔ med=55.4ms p95=1932.5ms  worst=1933.1ms
+FunctionCall         total 786.9ms n=2117 worst 33.5ms
+GPUTask              total 570.5ms n=649 worst 25.1ms
+UpdateLayoutTree     total 439.7ms n=608 worst 14.6ms
+RasterTask           total 323.4ms n=911 worst 35.1ms
+Paint                total 257.4ms n=330 worst 6.5ms
+Layout               total 177.1ms n=348 worst 27.8ms
+task 64.1ms @+335ms: ThreadControllerImpl::RunTask 63.5ms | FireAnimationFrame 33.9ms | FunctionCall 33.5ms step | FireAnimationFrame 8.2ms
+task 51.6ms @+129ms: ThreadControllerImpl::RunTask 51.2ms | Layout 27.8ms | UpdateLayoutTree 12.5ms | PrePaint 4.4ms
+task 28.3ms @+2880ms: ThreadControllerImpl::RunTask 28.3ms | FireAnimationFrame 14.1ms | FunctionCall 14.1ms | Layout 11.6ms
+task 25.1ms @+419ms: ThreadControllerImpl::RunTask 25.1ms | GPUTask 25.1ms | ThreadPool_RunTask 6.7ms | DawnPlatformImpl::RunWorkerTask 6.7ms
+task 22.3ms @+917ms: ThreadControllerImpl::RunTask 22.3ms | EventDispatch 11.0ms | FunctionCall 10.9ms | UpdateLayoutTree 10.5ms
+##### SUSPECT=simplefilter THROTTLE=4
+run 0: ticks=38 tickΔ med=56.0 p95=84.6 max=270.8 dropped(Δ>85ms)=1 refits@=309,464,517 fontsReady=510 firstTick=41 titleReady=2827 sweepWrites=13 rafΔ med=7.0 p95=14.8
+run 1: ticks=36 tickΔ med=55.6 p95=116.5 max=208.8 dropped(Δ>85ms)=2 refits@=254,342,451 fontsReady=444 firstTick=50 titleReady=2745 sweepWrites=13 rafΔ med=7.0 p95=14.4
+run 2: ticks=37 tickΔ med=55.8 p95=120.9 max=187.1 dropped(Δ>85ms)=2 refits@=225,290,365 fontsReady=359 firstTick=40 titleReady=2746 sweepWrites=13 rafΔ med=7.0 p95=14.5
+=== simplefilter @4x (3 cold loads) ===
+tickΔ  med=55.8ms p95=84.6ms  dropped=5/108
+sweepΔ med=55.3ms p95=1928.8ms  worst=1931.6ms
+FunctionCall         total 796.3ms n=1990 worst 35.7ms
+GPUTask              total 552.8ms n=592 worst 25.6ms
+UpdateLayoutTree     total 443.2ms n=571 worst 15.1ms
+RasterTask           total 348.1ms n=841 worst 42.8ms
+Paint                total 253.6ms n=310 worst 7.2ms
+Layout               total 188.1ms n=325 worst 28.7ms
+task 71.2ms @+330ms: ThreadControllerImpl::RunTask 71.1ms | FireAnimationFrame 35.8ms | FunctionCall 35.7ms step | FireAnimationFrame 10.9ms
+task 54.0ms @+142ms: ThreadControllerImpl::RunTask 53.7ms | Layout 28.7ms | UpdateLayoutTree 15.1ms | PrePaint 4.6ms
+task 33.2ms @+2858ms: ThreadControllerImpl::RunTask 33.1ms | FireAnimationFrame 17.7ms | FunctionCall 17.3ms | Layout 14.8ms
+task 29.7ms @+915ms: ThreadControllerImpl::RunTask 29.7ms | EventDispatch 15.5ms | FunctionCall 15.4ms | UpdateLayoutTree 15.0ms
+task 25.6ms @+425ms: ThreadControllerImpl::RunTask 25.6ms | GPUTask 25.6ms | ThreadPool_RunTask 6.1ms | DawnPlatformImpl::RunWorkerTask 6.1ms
+##### SUSPECT=nocircuit THROTTLE=4
+run 0: ticks=38 tickΔ med=55.2 p95=84.3 max=427.6 dropped(Δ>85ms)=1 refits@=466,558,694 fontsReady=551 firstTick=42 titleReady=2988 sweepWrites=13 rafΔ med=7.0 p95=14.3
+run 1: ticks=37 tickΔ med=55.6 p95=111.8 max=160.8 dropped(Δ>85ms)=2 refits@=192,255,326 fontsReady=321 firstTick=34 titleReady=2719 sweepWrites=13 rafΔ med=6.9 p95=13.6
+run 2: ticks=37 tickΔ med=55.5 p95=111.4 max=166.2 dropped(Δ>85ms)=2 refits@=201,263,338 fontsReady=331 firstTick=38 titleReady=2727 sweepWrites=13 rafΔ med=7.0 p95=14.0
+=== nocircuit @4x (3 cold loads) ===
+tickΔ  med=55.4ms p95=84.3ms  dropped=5/109
+sweepΔ med=55.9ms p95=1914.2ms  worst=1924.0ms
+FunctionCall         total 679.7ms n=2015 worst 34.8ms
+GPUTask              total 514.5ms n=469 worst 23.4ms
+UpdateLayoutTree     total 344.7ms n=422 worst 13.5ms
+RasterTask           total 306.0ms n=422 worst 33.7ms
+Paint                total 196.7ms n=356 worst 7.1ms
+Layout               total 138.5ms n=156 worst 26.0ms
+task 67.7ms @+483ms: ThreadControllerImpl::RunTask 67.7ms | FireAnimationFrame 35.3ms | FunctionCall 34.8ms step | FireAnimationFrame 8.9ms
+task 48.3ms @+279ms: ThreadControllerImpl::RunTask 48.2ms | Layout 26.0ms | UpdateLayoutTree 12.2ms | PrePaint 4.6ms
+task 25.9ms @+3012ms: ThreadControllerImpl::RunTask 25.9ms | FireAnimationFrame 14.0ms | FunctionCall 14.0ms | Layout 12.0ms
+task 25.2ms @+1057ms: ThreadControllerImpl::RunTask 25.2ms | EventDispatch 14.3ms | FunctionCall 14.2ms | UpdateLayoutTree 13.2ms
+task 23.4ms @+391ms: ThreadControllerImpl::RunTask 23.4ms | GPUTask 23.4ms | ThreadPool_RunTask 9.6ms | DawnPlatformImpl::RunWorkerTask 9.6ms
+##### SUSPECT=nocssanim THROTTLE=4
+run 0: ticks=37 tickΔ med=55.6 p95=92.7 max=368.5 dropped(Δ>85ms)=3 refits@=410,611,644 fontsReady=637 firstTick=44 titleReady=2930 sweepWrites=13 rafΔ med=6.9 p95=14.0
+run 1: ticks=38 tickΔ med=55.8 p95=85.8 max=207.5 dropped(Δ>85ms)=2 refits@=245,428,437 fontsReady=432 firstTick=40 titleReady=2743 sweepWrites=13 rafΔ med=7.0 p95=14.2
+run 2: ticks=37 tickΔ med=55.2 p95=145.0 max=205.2 dropped(Δ>85ms)=2 refits@=243,424,429 fontsReady=417 firstTick=42 titleReady=2751 sweepWrites=13 rafΔ med=7.0 p95=13.9
+=== nocssanim @4x (3 cold loads) ===
+tickΔ  med=55.6ms p95=91.8ms  dropped=7/109
+sweepΔ med=55.7ms p95=1909.3ms  worst=1910.7ms
+GPUTask              total 645.8ms n=803 worst 23.6ms
+FunctionCall         total 452.8ms n=2191 worst 37.7ms
+RasterTask           total 326.2ms n=814 worst 39.6ms
+UpdateLayoutTree     total 228.5ms n=323 worst 21.3ms
+Layout               total 160.7ms n=329 worst 27.3ms
+Paint                total 114.5ms n=300 worst 8.0ms
+task 69.6ms @+455ms: ThreadControllerImpl::RunTask 69.6ms | FireAnimationFrame 37.8ms | FunctionCall 37.7ms step | FireAnimationFrame 9.7ms
+task 51.9ms @+249ms: ThreadControllerImpl::RunTask 51.8ms | Layout 27.3ms | UpdateLayoutTree 14.2ms | PrePaint 4.4ms
+task 33.9ms @+2955ms: ThreadControllerImpl::RunTask 33.9ms | FireAnimationFrame 16.8ms | FunctionCall 16.4ms | Layout 14.9ms
+task 31.4ms @+653ms: ThreadControllerImpl::RunTask 31.3ms | FireAnimationFrame 20.5ms | FunctionCall 19.9ms | UpdateLayoutTree 18.7ms
+task 23.6ms @+372ms: ThreadControllerImpl::RunTask 23.6ms | GPUTask 23.6ms | Layout 14.8ms | ThreadPool_RunTask 10.8ms
+##### SUSPECT=nofont THROTTLE=4
+run 0: ticks=32 tickΔ med=57.6 p95=184.0 max=351.7 dropped(Δ>85ms)=3 refits@=226,426,461 fontsReady=454 firstTick=45 titleReady=2728 sweepWrites=13 rafΔ med=7.1 p95=20.8
+run 1: ticks=37 tickΔ med=55.3 p95=113.4 max=195.3 dropped(Δ>85ms)=3 refits@=230,389,428 fontsReady=417 firstTick=37 titleReady=2740 sweepWrites=13 rafΔ med=7.0 p95=14.0
+run 2: ticks=38 tickΔ med=55.6 p95=88.1 max=180.0 dropped(Δ>85ms)=2 refits@=214,364,400 fontsReady=389 firstTick=37 titleReady=2724 sweepWrites=13 rafΔ med=6.9 p95=14.0
+=== nofont @4x (3 cold loads) ===
+tickΔ  med=55.9ms p95=94.3ms  dropped=8/104
+sweepΔ med=55.5ms p95=1914.0ms  worst=1923.0ms
+GPUTask              total 1137.5ms n=550 worst 339.3ms
+FunctionCall         total 716.5ms n=1715 worst 36.5ms
+UpdateLayoutTree     total 391.2ms n=496 worst 15.6ms
+Paint                total 222.5ms n=277 worst 7.5ms
+Layout               total 154.8ms n=282 worst 31.1ms
+RasterTask           total 81.1ms n=709 worst 38.7ms
+task 339.3ms @+1098ms: ThreadControllerImpl::RunTask 339.3ms | GPUTask 339.3ms | ThreadPool_RunTask 333.2ms | DawnPlatformImpl::RunWorkerTask 333.1ms
+task 210.5ms @+2899ms: ThreadControllerImpl::RunTask 210.5ms | GPUTask 210.5ms | ThreadPool_RunTask 207.8ms | DawnPlatformImpl::RunWorkerTask 207.8ms
+task 73.7ms @+246ms: ThreadControllerImpl::RunTask 73.3ms | FireAnimationFrame 36.6ms | FunctionCall 36.5ms step | RunTask 13.8ms
+task 56.0ms @+56ms: ThreadControllerImpl::RunTask 55.9ms | Layout 31.1ms | UpdateLayoutTree 12.7ms | PrePaint 5.0ms
+task 29.1ms @+836ms: ThreadControllerImpl::RunTask 29.0ms | EventDispatch 16.4ms | FunctionCall 16.3ms | UpdateLayoutTree 15.6ms
+task 26.3ms @+196ms: ThreadControllerImpl::RunTask 26.3ms | GPUTask 26.3ms | UpdateLayoutTree 13.9ms | ThreadPool_RunTask 12.0ms

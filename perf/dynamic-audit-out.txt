@@ -1,0 +1,2 @@
+=== SCROLL THROTTLE 4x ===
+baseline         {"frames":491,"median":8.4,"p95":17,"worst":41.2,"dropped>26ms":2,"hitch>50ms":0}

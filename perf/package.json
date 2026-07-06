@@ -1,0 +1,10 @@
+{
+  "name": "perf-harness",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Automated headless-Chrome profiling harness for F4 (accordion) and F5 (hero glint).",
+  "dependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}

@@ -17,13 +17,7 @@ PERF-AUDIT.md
 .gitignore
 .gitignore
 js/terminal/banners.js
-perf/package-lock.json
-perf/RESULTS.md
-perf/run.log
-perf/package.json
 .gitignore
 perf/harness.mjs
-perf/harness.mjs
 .gitignore
-perf/dynamic-audit-out.txt
 .gitignore
