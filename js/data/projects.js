@@ -22,6 +22,15 @@ window.PORTFOLIO.projects = [
     desc: 'A platform for distributors and the resellers beneath them, where each side logs into its own scoped portal, with inventory tracking, bulk pricing tiers, and a sales-and-revenue dashboard.',
   },
   {
+    id:   'taskbench-extension',
+    name: 'Taskbench',
+    type: 'VS Code Extension',
+    date: 'JUL 2026',
+    url:  'https://github.com/stafawashere/taskbench-extension',
+    tech: ['JavaScript'],
+    desc: 'A VS Code extension that turns the Explorer sidebar into a command workbench: one-click shell tasks with live status you can stop mid-run, background servers and watchers included. Everything lives in a plain JSON file, so your whole team\'s tasks ride along in version control.',
+  },
+  {
     id:   'trashy-apocalypse',
     name: 'Trashy Apocalypse',
     type: 'Arcade',
