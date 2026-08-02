@@ -22,6 +22,15 @@ window.PORTFOLIO.projects = [
     desc: 'A platform for distributors and the resellers beneath them, where each side logs into its own scoped portal, with inventory tracking, bulk pricing tiers, and a sales-and-revenue dashboard.',
   },
   {
+    id:   'inspect-workflow',
+    name: 'Inspect Workflow',
+    type: 'Developer Tool',
+    date: 'JUL 2026',
+    url:  'https://github.com/stafawashere/inspectworkflow',
+    tech: ['Python', 'HTML5'],
+    desc: 'A local viewer that turns raw Claude Code JSONL logs into readable conversations, grouping subagents and workflow runs as they actually happened. It follows live transcripts over SSE, all from one dependency-free Python file and a single HTML page.',
+  },
+  {
     id:   'taskbench-extension',
     name: 'Taskbench',
     type: 'VS Code Extension',

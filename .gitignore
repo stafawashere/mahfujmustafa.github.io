@@ -21,3 +21,4 @@ js/terminal/banners.js
 perf/harness.mjs
 .gitignore
 .gitignore
+AGENTS.md
