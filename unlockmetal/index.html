@@ -25,6 +25,7 @@
          background: #16161d; border-radius: .5rem; color: #cfcfd6;
          white-space: pre-wrap; font-size: 13px;
       }
+      .updated { margin-top: 1.25rem; color: #7d7d85; font-size: 13px; }
    </style>
 </head>
 <body>
@@ -33,6 +34,27 @@
       <p>Personal macOS build. Apple silicon only. Roblox must be installed.</p>
       <a class="btn" href="UnlockMetal.zip" download>Download UnlockMetal.zip</a>
       <code>curl -fsSL https://mahfujmustafa.dev/unlockmetal/install.sh | bash</code>
+      <p class="updated" id="updated">Last updated: checking…</p>
    </main>
+   <script>
+      fetch("version.json?" + Date.now())
+         .then(function (response) { return response.json(); })
+         .then(function (version) {
+            var el = document.getElementById("updated");
+            var when = version.published ? new Date(version.published) : null;
+
+            if (when && !isNaN(when)) {
+               el.textContent = "Last updated: " + when.toLocaleString(undefined, {
+                  year: "numeric", month: "long", day: "numeric",
+                  hour: "numeric", minute: "2-digit"
+               });
+            } else {
+               el.textContent = "Last updated: " + (version.publishedHuman || "unknown");
+            }
+         })
+         .catch(function () {
+            document.getElementById("updated").textContent = "";
+         });
+   </script>
 </body>
 </html>
