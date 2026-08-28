@@ -25,6 +25,22 @@
       } catch (e) {}
     })();
   </script>
+  <script>
+    /* WebKit rasterizes SVG filters on the main thread and keeps no filter
+       result cache, so the liquid turbulence/lighting chains cost far more
+       there than in Blink. A few load-time paths are staged differently when
+       this is set — see the CURIE_WEBKIT reads in hero.js, main.js and the
+       section-title builder at the end of this file.
+       Covers macOS Safari plus every iOS browser, since those are WebKit too;
+       Chrome/Edge/Brave report a Chrome token and a non-Apple vendor. */
+    (function () {
+      var ua = navigator.userAgent;
+      var isBlink = /Chrome\/|Chromium\/|Edg\//.test(ua);
+      var isAppleEngine = /Apple/.test(navigator.vendor || '') || /iPad|iPhone|iPod/.test(ua);
+      window.CURIE_WEBKIT = isAppleEngine && !isBlink;
+      if (window.CURIE_WEBKIT) document.documentElement.classList.add('is-webkit');
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
@@ -103,59 +119,102 @@
               <stop offset="100%" stop-color="#e0e2f1"/>
             </linearGradient>
 
-            <filter id="liquid-inflate" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
-              <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
-              <feGaussianBlur in="warp" stdDeviation="3.5" result="hmap"/>
+<!-- One turbulence field feeds every stage. The three chains this replaces
+                 (shadow / inflate / glint) each recomputed the same fractalNoise at the
+                 same baseFrequency and seed, then stacked as three filtered <text> copies;
+                 feMerge reproduces that paint order from a single pass. -->
+              <filter id="liquid-hero-base" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
 
-              <feDiffuseLighting in="hmap" surfaceScale="5" diffuseConstant="1.15" lighting-color="#c2c6dc" result="diff">
-                <feDistantLight azimuth="248" elevation="58"/>
-              </feDiffuseLighting>
-              <feComposite in="diff" in2="warp" operator="in" result="diffClip"/>
-              <feBlend in="warp" in2="diffClip" mode="multiply" result="body"/>
+                <feDisplacementMap in="SourceAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="awarp"/>
+                <feComponentTransfer in="awarp" result="fat">
+                  <feFuncA type="table" tableValues="0 0.1289 0.2489 0.36 0.4622 0.5556 0.64 0.7156 0.7822 0.84 0.8889 0.9289 0.96 0.9822 0.9956 1"/>
+                </feComponentTransfer>
+                <feGaussianBlur in="fat" stdDeviation="12" result="soft"/>
+                <feOffset in="soft" dx="0" dy="10" result="cast"/>
+                <feFlood flood-color="#06060c" flood-opacity="0.55" result="castInk"/>
+                <feComposite in="castInk" in2="cast" operator="in" result="shade"/>
 
-              <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.1" specularExponent="80" lighting-color="#b9b3f2" result="spec2">
-                <fePointLight x="760" y="640" z="130"/>
-              </feSpecularLighting>
-              <feComposite in="spec2" in2="warp" operator="in" result="spec2Clip"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+                <feGaussianBlur in="warp" stdDeviation="3.5" result="hmap"/>
 
-              <feMerge>
-                <feMergeNode in="body"/>
-                <feMergeNode in="spec2Clip"/>
-              </feMerge>
-            </filter>
+                <feDiffuseLighting in="hmap" surfaceScale="5" diffuseConstant="1.15" lighting-color="#c2c6dc" result="diff">
+                  <feDistantLight azimuth="248" elevation="58"/>
+                </feDiffuseLighting>
+                <feComposite in="diff" in2="warp" operator="in" result="diffClip"/>
+                <feBlend in="warp" in2="diffClip" mode="multiply" result="body"/>
 
-            <filter id="liquid-glint" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
-              <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
-              <feGaussianBlur in="warp" stdDeviation="3.5" result="hmap"/>
+                <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.1" specularExponent="80" lighting-color="#b9b3f2" result="spec2">
+                  <fePointLight x="760" y="640" z="130"/>
+                </feSpecularLighting>
+                <feComposite in="spec2" in2="warp" operator="in" result="spec2Clip"/>
 
-              <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.7" specularExponent="42" lighting-color="#ffffff" result="spec">
-                <fePointLight class="mv-light" x="360" y="150" z="170"/>
-              </feSpecularLighting>
-              <feComposite in="spec" in2="warp" operator="in"/>
-            </filter>
+                <feMerge>
+                  <feMergeNode in="shade"/>
+                  <feMergeNode in="body"/>
+                  <feMergeNode in="spec2Clip"/>
+                </feMerge>
+              </filter>
 
-            <filter id="liquid-shadow" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
-              <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
-              <feDisplacementMap in="SourceAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
-              <feComponentTransfer in="warp" result="fat">
-                <feFuncA type="table" tableValues="0 0.1289 0.2489 0.36 0.4622 0.5556 0.64 0.7156 0.7822 0.84 0.8889 0.9289 0.96 0.9822 0.9956 1"/>
-              </feComponentTransfer>
-              <feGaussianBlur in="fat" stdDeviation="12" result="soft"/>
-              <feOffset in="soft" dx="0" dy="10" result="cast"/>
-              <feFlood flood-color="#06060c" flood-opacity="0.55"/>
-              <feComposite in2="cast" operator="in"/>
-            </filter>
+              <!-- hero only: the glint light tracks the pointer, so it stays a separate
+                 chain rather than dirtying the base filter on every move. -->
+              <filter id="liquid-glint" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+                <feGaussianBlur in="warp" stdDeviation="3.5" result="hmap"/>
+
+                <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.7" specularExponent="42" lighting-color="#ffffff" result="spec">
+                  <fePointLight class="mv-light" x="360" y="150" z="170"/>
+                </feSpecularLighting>
+                <feComposite in="spec" in2="warp" operator="in"/>
+              </filter>
+
+              <!-- section titles + the contact word: same look, but the glint light is
+                 fixed at its rest position instead of referencing the hero's animated
+                 one, so a pointer sweep over the hero no longer dirties all of them. -->
+              <filter id="liquid-static" x="-9%" y="-11%" width="118%" height="134%" color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="2" seed="6" result="noise"/>
+
+                <feDisplacementMap in="SourceAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="awarp"/>
+                <feComponentTransfer in="awarp" result="fat">
+                  <feFuncA type="table" tableValues="0 0.1289 0.2489 0.36 0.4622 0.5556 0.64 0.7156 0.7822 0.84 0.8889 0.9289 0.96 0.9822 0.9956 1"/>
+                </feComponentTransfer>
+                <feGaussianBlur in="fat" stdDeviation="12" result="soft"/>
+                <feOffset in="soft" dx="0" dy="10" result="cast"/>
+                <feFlood flood-color="#06060c" flood-opacity="0.55" result="castInk"/>
+                <feComposite in="castInk" in2="cast" operator="in" result="shade"/>
+
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+                <feGaussianBlur in="warp" stdDeviation="3.5" result="hmap"/>
+
+                <feDiffuseLighting in="hmap" surfaceScale="5" diffuseConstant="1.15" lighting-color="#c2c6dc" result="diff">
+                  <feDistantLight azimuth="248" elevation="58"/>
+                </feDiffuseLighting>
+                <feComposite in="diff" in2="warp" operator="in" result="diffClip"/>
+                <feBlend in="warp" in2="diffClip" mode="multiply" result="body"/>
+
+                <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.1" specularExponent="80" lighting-color="#b9b3f2" result="spec2">
+                  <fePointLight x="760" y="640" z="130"/>
+                </feSpecularLighting>
+                <feComposite in="spec2" in2="warp" operator="in" result="spec2Clip"/>
+
+                <feSpecularLighting in="hmap" surfaceScale="5" specularConstant="1.7" specularExponent="42" lighting-color="#ffffff" result="spec">
+                  <fePointLight x="360" y="150" z="170"/>
+                </feSpecularLighting>
+                <feComposite in="spec" in2="warp" operator="in" result="specClip"/>
+
+                <feMerge>
+                  <feMergeNode in="shade"/>
+                  <feMergeNode in="body"/>
+                  <feMergeNode in="spec2Clip"/>
+                  <feMergeNode in="specClip"/>
+                </feMerge>
+              </filter>
           </defs>
           <g class="t-ink" fill="url(#liquid-skin)" stroke="url(#liquid-skin)" stroke-width="2"
              stroke-linejoin="round" stroke-linecap="round"
              text-anchor="start" font-family="'Pacifico',cursive" paint-order="stroke fill">
-            <g filter="url(#liquid-shadow)">
-              <text class="t-line1" x="10" y="225" font-size="200">Mahfuj</text>
-              <text class="t-line2" x="770" y="225" font-size="200">Mustafa</text>
-            </g>
-            <g filter="url(#liquid-inflate)">
+            <g filter="url(#liquid-hero-base)">
               <text class="t-line1" x="10" y="225" font-size="200">Mahfuj</text>
               <text class="t-line2" x="770" y="225" font-size="200">Mustafa</text>
             </g>
@@ -329,9 +388,7 @@
                     <g fill="url(#liquid-skin)" stroke="url(#liquid-skin)" stroke-width="2"
                        stroke-linejoin="round" stroke-linecap="round"
                        font-family="'Pacifico',cursive" paint-order="stroke fill">
-                      <text x="10" y="225" font-size="200" filter="url(#liquid-shadow)">solid</text>
-                      <text x="10" y="225" font-size="200" filter="url(#liquid-inflate)">solid</text>
-                      <text x="10" y="225" font-size="200" filter="url(#liquid-glint)">solid</text>
+                      <text x="10" y="225" font-size="200" filter="url(#liquid-static)">solid</text>
                     </g>
                   </svg>.</h2>
                 <p class="contact-sub">
@@ -440,14 +497,12 @@
       g.setAttribute('stroke-linecap', 'round');
       g.setAttribute('font-family', "'Pacifico',cursive");
       g.setAttribute('paint-order', 'stroke fill');
-      ['#liquid-shadow', '#liquid-inflate', '#liquid-glint'].forEach(function (f) {
-        var t = document.createElementNS(NS, 'text');
-        t.setAttribute('x', '10'); t.setAttribute('y', '225');
-        t.setAttribute('font-size', '200');
-        t.setAttribute('filter', 'url(' + f + ')');
-        t.textContent = word;
-        g.appendChild(t);
-      });
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', '10'); t.setAttribute('y', '225');
+      t.setAttribute('font-size', '200');
+      t.setAttribute('filter', 'url(#liquid-static)');
+      t.textContent = word;
+      g.appendChild(t);
       svg.appendChild(g);
       span.appendChild(svg);
 
@@ -479,8 +534,7 @@
       built.svg.setAttribute('data-sized', '1');
       return true;
     }
-    function run() {
-      var built = [].map.call(document.querySelectorAll('.node-title[data-word]'), build);
+    function size(built) {
       function pass() {
         var allDone = built.every(function (x) {
           return x.svg.getAttribute('data-sized') || measure(x);
@@ -488,9 +542,33 @@
         if (!allDone) requestAnimationFrame(pass);
       }
       pass();
+      // resolves immediately for anything built after the fonts already landed,
+      // which is the normal case on the deferred path below
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(function () { built.forEach(measure); });
       }
+    }
+    function run() {
+      var spans = [].slice.call(document.querySelectorAll('.node-title[data-word]'));
+
+      // On WebKit every one of these costs a full turbulence + lighting raster,
+      // and building all five up front puts five of them plus their shimmer
+      // clones in the same frame the boot animation starts in. Build each a
+      // screen ahead of the viewport instead; .node-title reserves the height
+      // so a late build can't shift the layout under the circuit traces.
+      if (window.CURIE_WEBKIT && 'IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            io.unobserve(entry.target);
+            size([build(entry.target)]);
+          });
+        }, { rootMargin: '400px 0px' });
+        spans.forEach(function (span) { io.observe(span); });
+        return;
+      }
+
+      size(spans.map(build));
     }
     if (document.readyState === 'loading')
       document.addEventListener('DOMContentLoaded', run);

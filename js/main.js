@@ -253,6 +253,7 @@
         rotation += 1;
 
         candidates.forEach(card => {
+          if (card.classList.contains('is-gleam')) return;
           card.classList.add('is-gleam');
           card.addEventListener('animationend', () => card.classList.remove('is-gleam'), { once: true });
         });
@@ -427,7 +428,12 @@
     const root = document.getElementById("root");
     if (!root) return;
 
-    document.body.style.setProperty("--bg-h", root.offsetHeight + "px");
+    // The transitionend sync and the debounced observer routinely land on the
+    // same height, and every write repaints the whole 14-layer background.
+    const next = root.offsetHeight + "px";
+    if (document.body.style.getPropertyValue("--bg-h") === next) return;
+
+    document.body.style.setProperty("--bg-h", next);
   }
 
   function initBackgroundSizing() {
@@ -571,8 +577,18 @@
         if (!coreLit && coreProgress <= 0) startLocalBootFeed();
       }, grace);
     };
+    // On WebKit the hero refit and the section-title measure pass both ride
+    // fonts.ready, and each one dirties a liquid filter chain. Let that raster
+    // flush before the boot animation starts asking for 60fps; setProgress
+    // above absorbs the two-frame delay so nothing desyncs from the core.
+    const beginTitle = window.CURIE_WEBKIT
+      ? () => requestAnimationFrame(() => requestAnimationFrame(startTitle))
+      : startTitle;
+
     if (document.fonts && document.fonts.load) {
-      document.fonts.load('200px Pacifico').then(startTitle, startTitle);
+      document.fonts.load('200px Pacifico').then(beginTitle, beginTitle);
+      // hard safety net — stays a direct call so a throttled rAF (background
+      // tab) can't leave the title unbooted
       setTimeout(startTitle, 300);
     } else {
       startTitle();

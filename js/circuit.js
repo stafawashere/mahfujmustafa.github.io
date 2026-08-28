@@ -393,9 +393,10 @@ function initCircuit(host, getAnimCfg, isAlive, hooks) {
 
   /* ---------- polyline helpers ---------- */
   function polyLen(p) {
+    if (p.__len !== undefined) return p.__len;
     let L = 0;
     for (let i = 0; i < p.length - 1; i++) L += Math.hypot(p[i + 1][0] - p[i][0], p[i + 1][1] - p[i][1]);
-    return L;
+    return (p.__len = L);
   }
   function polyAt(p, t) {
     let tgt = clamp(t, 0, 1) * polyLen(p);
@@ -897,9 +898,12 @@ function initCircuit(host, getAnimCfg, isAlive, hooks) {
         const prevTc = st.nodePhase[n.i];
         st.nodePhase[n.i] = tcyc;
         if (n.head && prevTc != null && prevTc < travelDur && tcyc >= travelDur) {
-          n.head.classList.remove('shimmer');
-          void n.head.offsetWidth;              // restart the CSS animation
-          n.head.classList.add('shimmer');
+          // alternate two identical keyframe names: reading offsetWidth here to
+          // restart the animation flushed a full document layout in the middle
+          // of the frame, right after the SVG had been dirtied.
+          const wasA = n.head.classList.contains('shimmer');
+          n.head.classList.remove(wasA ? 'shimmer' : 'shimmer-alt');
+          n.head.classList.add(wasA ? 'shimmer-alt' : 'shimmer');
         }
         const amp = 0.45 + 0.55 * act;
 
@@ -1385,7 +1389,7 @@ function initCircuit(host, getAnimCfg, isAlive, hooks) {
     st.alpha += ((g.enabled ? 1 : 0) - st.alpha) * 0.1 * dt;
     if (g.enabled && st.alpha > 0.995) st.alpha = 1;   // snap so the style write below settles
     if (st.alpha < 0.02) {
-      host.style.opacity = '0';
+      if (host.__op !== '0') { host.__op = '0'; host.style.opacity = '0'; }
       if (g.enabled) schedule();
       return;
     }

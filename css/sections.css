@@ -812,6 +812,9 @@
    background-size: 280% 100%;
    mix-blend-mode: screen;
    opacity: 0;
+   /* same reasoning as .liquid-shimmer: at opacity 0 this still held a
+      screen-blend group open over the whole card for 24.6s of every 26s */
+   visibility: hidden;
    animation: contact-sheen 26s linear infinite;
    animation-delay: 6s;
 }
@@ -828,10 +831,10 @@
 }
 
 @keyframes contact-sheen {
-   0%   { background-position: 140% 0; opacity: 0; }
+   0%   { visibility: visible; background-position: 140% 0; opacity: 0; }
    0.8% { opacity: 1; }
    5.2% { opacity: 1; }
-   6%   { background-position: -140% 0; opacity: 0; }
+   6%   { visibility: hidden; background-position: -140% 0; opacity: 0; }
    100% { background-position: -140% 0; opacity: 0; }
 }
 
@@ -1130,6 +1133,9 @@
   line-height: 0;
   position: relative;
   font-size: 22px;
+  /* matches .liquid-title's height so the header keeps its size before the
+     SVG is appended — the WebKit path builds these on scroll, not at load */
+  min-height: 7em;
 }
 
 .node-title .liquid-title {
@@ -1166,6 +1172,11 @@
   overflow: visible;
   opacity: 0;
   pointer-events: none;
+  /* hidden, not just transparent: at opacity 0 the clone still painted its
+     filter chain and still opened a mix-blend-mode group on every raster pass.
+     It is only ever visible for the 0.62s the shimmer class is on, so keep it
+     out of paint until then. */
+  visibility: hidden;
   mix-blend-mode: screen;
   -webkit-mask-image: linear-gradient(100deg, transparent 42%, #000 50%, transparent 58%);
           mask-image: linear-gradient(100deg, transparent 42%, #000 50%, transparent 58%);
@@ -1179,13 +1190,24 @@
 .section-header.shimmer .liquid-shimmer {
   animation: titleShimmer 0.62s ease-out;
 }
+/* identical twin, alternated by the circuit so the sweep can restart without
+   a reflow — swapping the class alone will not retrigger the same keyframes */
+.section-header.shimmer-alt .liquid-shimmer {
+  animation: titleShimmerAlt 0.62s ease-out;
+}
 @keyframes titleShimmer {
-  0%   { opacity: 0;    -webkit-mask-position: -50% 0;  mask-position: -50% 0; }
+  0%   { visibility: visible; opacity: 0;    -webkit-mask-position: -50% 0;  mask-position: -50% 0; }
   18%  { opacity: 0.95; }
-  100% { opacity: 0;    -webkit-mask-position: 150% 0;  mask-position: 150% 0; }
+  100% { visibility: hidden;  opacity: 0;    -webkit-mask-position: 150% 0;  mask-position: 150% 0; }
+}
+@keyframes titleShimmerAlt {
+  0%   { visibility: visible; opacity: 0;    -webkit-mask-position: -50% 0;  mask-position: -50% 0; }
+  18%  { opacity: 0.95; }
+  100% { visibility: hidden;  opacity: 0;    -webkit-mask-position: 150% 0;  mask-position: 150% 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .section-header.shimmer .liquid-shimmer { animation: none; }
+  .section-header.shimmer .liquid-shimmer,
+  .section-header.shimmer-alt .liquid-shimmer { animation: none; }
 }
 
 /* ── the trace spacer — the board SVG draws the actual net through here ── */

@@ -125,8 +125,7 @@ function bootLiquidTitle() {
 
   const ink = svg.querySelector(".t-ink");
   if (ink) ink.style.opacity = "";
-  svg.querySelectorAll('g[filter="url(#liquid-shadow)"], g[filter="url(#liquid-glint)"]')
-     .forEach((g) => { g.style.display = ""; });
+  svg.querySelectorAll("g[filter]").forEach((g) => { g.style.display = ""; });
 
   signalTitleReady();
   return NOOP;
@@ -137,6 +136,14 @@ function initLiquidTitle() {
   if (!svg) return;
 
   const hint = document.querySelector('.scroll-hint');
+
+  // The rect only moves on scroll, on resize, or when fitTitleToViewport
+  // rewrites the title width — reading it per pointer frame forced a full
+  // synchronous layout of a filtered subtree for moves that get rejected below.
+  let cachedRect = null;
+  const invalidateRect = () => { cachedRect = null; };
+  window.addEventListener('scroll', invalidateRect, { passive: true });
+  window.addEventListener('resize', invalidateRect, { passive: true });
 
   function circuitMaxRight() {
     const vw = document.documentElement.clientWidth;
@@ -159,12 +166,12 @@ function initLiquidTitle() {
 
     const keep1 = line1.textContent;
     const keep2 = line2.textContent;
-    line1.textContent = 'Mahfuj';
-    line2.textContent = 'Mustafa';
+    if (keep1 !== 'Mahfuj') line1.textContent = 'Mahfuj';
+    if (keep2 !== 'Mustafa') line2.textContent = 'Mustafa';
     const len1 = line1.getComputedTextLength();
     const len2 = line2.getComputedTextLength();
-    line1.textContent = keep1;
-    line2.textContent = keep2;
+    if (keep1 !== 'Mahfuj') line1.textContent = keep1;
+    if (keep2 !== 'Mustafa') line2.textContent = keep2;
 
     if (stacked) {
       svg.querySelectorAll('.t-line2').forEach((el) => {
@@ -208,11 +215,20 @@ function initLiquidTitle() {
       svg.style.width = Math.round(targetW) + 'px';
       svg.style.maxWidth = 'none';
     }
+
+    invalidateRect();
   }
 
   fitTitleToViewport();
   window.addEventListener('load', fitTitleToViewport);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitleToViewport);
+  if (document.fonts && document.fonts.ready) {
+    // On WebKit keep the hero refit out of the frame the rest of the
+    // fonts.ready batch lands in — both invalidate liquid filter chains and
+    // the combined raster reads as a hitch.
+    document.fonts.ready.then(window.CURIE_WEBKIT
+      ? () => requestAnimationFrame(fitTitleToViewport)
+      : fitTitleToViewport);
+  }
 
   let resizeTimer = null;
   window.addEventListener('resize', () => {
@@ -243,7 +259,7 @@ function initLiquidTitle() {
     const e = pendingEvent;
     pendingEvent = null;
 
-    const rect = svg.getBoundingClientRect();
+    const rect = cachedRect || (cachedRect = svg.getBoundingClientRect());
     if (!rect.width || !rect.height) return;
 
     const reach = rect.height * 0.6;
